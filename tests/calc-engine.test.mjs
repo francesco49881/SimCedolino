@@ -6,6 +6,7 @@ import {
   calculateItemizedNet,
   calculateMarginalRates,
   calculateMonthlyEmployeeDeduction,
+  calculateMonthlyTaxWedge2026,
   splitSaturdayHours,
   round2,
 } from '../src/calc-engine.js';
@@ -225,4 +226,33 @@ test('Profilo vuoto iniziale: tutto a 0 senza NaN', () => {
   const emptyItems = calculateItemizedNet({ mese: 11 }, DEFAULT_PROFILE);
   assert.equal(emptyItems[0].deltaNetto, 0);
   assert.equal(emptyItems[0].percentualeNetta, 0);
+});
+
+test('Cuneo Fiscale 2026: bonus <= 20k, ulteriore detrazione 20k-40k, zero > 40k', () => {
+  // <= 20.000 €: somma esente 4,8% su imponibile fiscale mensile
+  const low = calculateMonthlyTaxWedge2026(18000, 1400);
+  assert.equal(low.bonusEsente, round2(1400 * 0.048));
+  assert.equal(low.ulterioreDetrazione, 0);
+
+  // 20.001..32.000 €: ulteriore detrazione fissa 1.000 €/anno = 83,33 €/mese
+  const mid = calculateMonthlyTaxWedge2026(28000, 2100);
+  assert.equal(mid.bonusEsente, 0);
+  assert.equal(mid.ulterioreDetrazione, 83.33);
+
+  // 32.001..40.000 €: 36.000 € -> 500 €/anno = 41,67 €/mese
+  const dec = calculateMonthlyTaxWedge2026(36000, 2700);
+  assert.equal(dec.bonusEsente, 0);
+  assert.equal(dec.ulterioreDetrazione, 41.67);
+
+  // > 40.000 €: 0 €
+  const high = calculateMonthlyTaxWedge2026(45000, 3500);
+  assert.deepEqual(high, { bonusEsente: 0, ulterioreDetrazione: 0 });
+
+  // Verifica invariante itemized con collega a 30.000 €
+  const colProfile = { ...DEFAULT_PROFILE, pagaBase: 2500, redditoAnnuoStimato: 30000, ebavFisso: 3.85 };
+  const colInput = { mese: 11, straordFeriale: 6, trasferte: [{ label: 'Estero', giorni: 5, diaria: 60, tipo: 'estero', regime: 'full' }] };
+  const res = calculatePayslip(colInput, colProfile);
+  assert.equal(res.irpef.ulterioreDetrazioneCuneo, 83.33);
+  const items = calculateItemizedNet(colInput, colProfile);
+  assert.equal(round2(items.reduce((a, i) => a + i.deltaNetto, 0)), res.totali.nettoEsatto);
 });

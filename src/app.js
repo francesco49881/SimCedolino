@@ -568,6 +568,9 @@ function renderFullPayslip(res) {
     ['Straordinario festivo (+45%)', fmtEur(res.competenze.lordoStrFest)],
     ['Straordinario sabato (+50%)', fmtEur(res.competenze.lordoStrSab)],
   ];
+  if (res.irpef.bonusEsenteCuneo > 0) {
+    compLines.push(['Bonus esente Cuneo Fiscale 2026', fmtEur(res.irpef.bonusEsenteCuneo)]);
+  }
   if (res.competenze.extraNetto !== 0) {
     compLines.push(['Voci nette extra / 730', fmtEur(res.competenze.extraNetto)]);
   }
@@ -582,7 +585,8 @@ function renderFullPayslip(res) {
     ['IRPEF scaglione 23%', fmtEur(res.irpef.scaglione1)],
     ['IRPEF scaglione 33%', fmtEur(res.irpef.scaglione2)],
     ['IRPEF scaglione 43%', fmtEur(res.irpef.scaglione3)],
-    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['Detrazioni lav. dipendente', res.irpef.detrazioniBase > 0 ? `-${fmtEur(res.irpef.detrazioniBase)}` : fmtEur(0)],
+    ['Ulteriore detraz. Cuneo 2026', res.irpef.ulterioreDetrazioneCuneo > 0 ? `-${fmtEur(res.irpef.ulterioreDetrazioneCuneo)}` : fmtEur(0)],
     ['Addizionale Regionale', fmtEur(res.addizionali.addReg)],
     ['Addizionale Comunale', fmtEur(res.addizionali.addCom)],
     ['Acconto Addizionale Comunale', fmtEur(res.addizionali.accCom)],
@@ -1064,7 +1068,7 @@ function exportPayslipAsJpg() {
   ];
   const rightSummary = [
     ['IRPEF Lorda (23% / 33% / 43%)', fmtEur(res.irpef.irpefLorda)],
-    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['Detrazioni lav. dip. + Cuneo 2026', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
     ['IRPEF Netta', fmtEur(res.irpef.irpefNetta)],
     ['Addizionali Locali (Reg. + Com.)', fmtEur(res.addizionali.totaleAddizionali)],
     ['Totale Trattenute', fmtEur(res.totali.totaleTrattenute)],

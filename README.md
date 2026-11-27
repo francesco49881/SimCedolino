@@ -18,7 +18,7 @@ Strumento leggero e **100% offline** per stimare in anticipo lo stipendio netto 
 - **Ore viaggio (`85%`) e straordinari (`+25%`, `+45%`, `+50%`)**.
 - **Regola automatica Sabato (CCNL Metalmeccanico Artigianato)**: inserisci le ore totali lavorate di sabato e il numero di sabati, e il simulatore ripartisce automaticamente le prime 3 ore per sabato al `+25%` e le successive al `+50%`.
 - **Netto di ogni singola voce**: scopri esattamente quanto entra in tasca per ciascuna voce (Base, Trasferte, Ore viaggio, Straordinari) e quanto vale al netto `+1 ora` / `+1 giorno` al tuo scaglione IRPEF corrente.
-- **Tasse e contributi 2026**: INPS `9,19%`, contributo aggiuntivo IVS `1%` oltre `4.685 €/mese`, FSBA `0,15%`, scaglioni IRPEF 2026 (`23% / 33% / 43%`) e detrazioni lavoro dipendente automatiche sotto i `50.000 €`.
+- **Tasse e contributi 2026**: INPS `9,19%`, contributo aggiuntivo IVS `1%` oltre `4.685 €/mese`, FSBA `0,15%`, scaglioni IRPEF 2026 (`23% / 33% / 43%`), detrazioni lavoro dipendente automatiche sotto i `50.000 €` e **taglio del Cuneo Fiscale 2026** (bonus esente fino a `20.000 €`, ulteriore detrazione fino a `1.000 €/anno` tra `20.000 €` e `40.000 €`).
 - **Stampa / PDF e Salva JPG**: salva il riepilogo teorico del mese per confrontarlo poi con la busta paga reale.
 
 ## Privacy

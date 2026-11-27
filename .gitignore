@@ -3,6 +3,8 @@
 *.jpg
 *.jpeg
 *.png
+*.zip
+SimCedolino-main/
 
 # Configurazioni e fixture locali private
 *.local.json

@@ -1754,6 +1754,35 @@ function calculateMonthlyEmployeeDeduction(annualIncome) {
 }
 
 /**
+ * Calcola il taglio del cuneo fiscale 2026 (L. 207/2024 art. 1 c. 4-6):
+ * - Reddito complessivo <= 20.000 €: somma integrativa esente (7,1% / 5,3% / 4,8% su imponibile fiscale)
+ * - Reddito complessivo 20.001..32.000 €: ulteriore detrazione IRPEF di 1.000 €/anno (83,33 €/mese)
+ * - Reddito complessivo 32.001..40.000 €: ulteriore detrazione decrescente 1.000 * (40.000 - R) / 8.000
+ * - Oltre 40.000 €: 0 €
+ * @param {number} annualIncome
+ * @param {number} monthlyTaxableIncome
+ * @returns {{ bonusEsente: number, ulterioreDetrazione: number }}
+ */
+function calculateMonthlyTaxWedge2026(annualIncome, monthlyTaxableIncome = 0) {
+  const r = Math.max(0, Number(annualIncome) || 0);
+  if (r === 0 || r > 40000) {
+    return { bonusEsente: 0, ulterioreDetrazione: 0 };
+  }
+  if (r <= 20000) {
+    const rate = r <= 8500 ? 0.071 : r <= 15000 ? 0.053 : 0.048;
+    return {
+      bonusEsente: round2(Math.max(0, Number(monthlyTaxableIncome) || 0) * rate),
+      ulterioreDetrazione: 0,
+    };
+  }
+  const annua = r <= 32000 ? 1000 : 1000 * ((40000 - r) / 8000);
+  return {
+    bonusEsente: 0,
+    ulterioreDetrazione: round2(annua / 12),
+  };
+}
+
+/**
  * Calcola la retribuzione fissa mensile e le tariffe orarie dal profilo.
  * @param {object} profile
  */
@@ -1906,10 +1935,14 @@ function calculatePayslip(input = {}, profile) {
   const redditoAnnuoStimato =
     Number(profile.redditoAnnuoStimato) > 0
       ? Number(profile.redditoAnnuoStimato)
-      : round2(baseLordo * 13);
-  const detrazioni = hasDetrOverride
+      : round2(baseLordo * (1 - Number(profile.inpsRate)) * 13);
+  const detrazioniBase = hasDetrOverride
     ? Number(input.detrazioniOverride)
     : calculateMonthlyEmployeeDeduction(redditoAnnuoStimato);
+  const cuneo = hasDetrOverride
+    ? { bonusEsente: 0, ulterioreDetrazione: 0 }
+    : calculateMonthlyTaxWedge2026(redditoAnnuoStimato, imponibileFiscale);
+  const detrazioni = round2(detrazioniBase + cuneo.ulterioreDetrazione);
   const irpefNetta = hasDetrOverride
     ? round2(irpefLorda - detrazioni)
     : Math.max(0, round2(irpefLorda - detrazioni));
@@ -1929,6 +1962,7 @@ function calculatePayslip(input = {}, profile) {
       lordoStrSab +
       premio +
       trasfLordoTot +
+      cuneo.bonusEsente +
       extraNetto
   );
 
@@ -1984,6 +2018,9 @@ function calculatePayslip(input = {}, profile) {
       scaglione2: round2(irpefScaglione2),
       scaglione3: round2(irpefScaglione3),
       irpefLorda,
+      detrazioniBase,
+      ulterioreDetrazioneCuneo: cuneo.ulterioreDetrazione,
+      bonusEsenteCuneo: cuneo.bonusEsente,
       detrazioni,
       irpefNetta,
       aliquotaMarginale: aliquotaIrpefMarginale,
@@ -2808,6 +2845,9 @@ function renderFullPayslip(res) {
     ['Straordinario festivo (+45%)', fmtEur(res.competenze.lordoStrFest)],
     ['Straordinario sabato (+50%)', fmtEur(res.competenze.lordoStrSab)],
   ];
+  if (res.irpef.bonusEsenteCuneo > 0) {
+    compLines.push(['Bonus esente Cuneo Fiscale 2026', fmtEur(res.irpef.bonusEsenteCuneo)]);
+  }
   if (res.competenze.extraNetto !== 0) {
     compLines.push(['Voci nette extra / 730', fmtEur(res.competenze.extraNetto)]);
   }
@@ -2822,7 +2862,8 @@ function renderFullPayslip(res) {
     ['IRPEF scaglione 23%', fmtEur(res.irpef.scaglione1)],
     ['IRPEF scaglione 33%', fmtEur(res.irpef.scaglione2)],
     ['IRPEF scaglione 43%', fmtEur(res.irpef.scaglione3)],
-    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['Detrazioni lav. dipendente', res.irpef.detrazioniBase > 0 ? `-${fmtEur(res.irpef.detrazioniBase)}` : fmtEur(0)],
+    ['Ulteriore detraz. Cuneo 2026', res.irpef.ulterioreDetrazioneCuneo > 0 ? `-${fmtEur(res.irpef.ulterioreDetrazioneCuneo)}` : fmtEur(0)],
     ['Addizionale Regionale', fmtEur(res.addizionali.addReg)],
     ['Addizionale Comunale', fmtEur(res.addizionali.addCom)],
     ['Acconto Addizionale Comunale', fmtEur(res.addizionali.accCom)],
@@ -3304,7 +3345,7 @@ function exportPayslipAsJpg() {
   ];
   const rightSummary = [
     ['IRPEF Lorda (23% / 33% / 43%)', fmtEur(res.irpef.irpefLorda)],
-    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['Detrazioni lav. dip. + Cuneo 2026', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
     ['IRPEF Netta', fmtEur(res.irpef.irpefNetta)],
     ['Addizionali Locali (Reg. + Com.)', fmtEur(res.addizionali.totaleAddizionali)],
     ['Totale Trattenute', fmtEur(res.totali.totaleTrattenute)],
