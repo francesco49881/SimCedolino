@@ -1,0 +1,13 @@
+# File personali e buste paga (mai tracciare)
+*.pdf
+*.jpg
+*.jpeg
+*.png
+
+# Configurazioni e fixture locali private
+*.local.json
+*.local.js
+
+# File di sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulatore Cedolino &amp; Trasferte</title>
+  <style>
+:root {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --emerald: #059669;
+  --emerald-soft: #ecfdf5;
+  --amber: #d97706;
+  --amber-soft: #fffbeb;
+  --rose: #e11d48;
+  --rose-soft: #fff1f2;
+  --indigo: #4f46e5;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--indigo));
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.tabs {
+  display: flex;
+  background: var(--surface-alt);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* LAYOUT */
+.main-container {
+  max-width: 1320px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  flex: 1;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.sim-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.col-inputs,
+.col-results {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.card-sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* BUTTONS & INPUTS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sm {
+  padding: 6px 11px;
+  font-size: 12.5px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-ghost {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  background: #eef2f7;
+}
+
+.btn-danger-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.btn-danger-ghost:hover {
+  color: var(--rose);
+  background: var(--rose-soft);
+}
+
+.input-field,
+.input-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-field:focus,
+.input-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.month-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.month-row .input-select {
+  max-width: 200px;
+}
+
+/* PILLS & BADGES */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill-muted {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.pill-emerald {
+  background: var(--emerald-soft);
+  color: var(--emerald);
+}
+
+.pill-amber {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.pill-blue {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.pill-rose {
+  background: var(--rose-soft);
+  color: var(--rose);
+}
+
+/* TRASFERTE */
+.trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trip-row {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-row-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.trip-row-fields {
+  display: grid;
+  grid-template-columns: 90px 110px 1fr;
+  gap: 8px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-group label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.trip-row-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 18px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ORE VARIABILI */
+.hours-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hour-item {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hour-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hour-meta label {
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.badge-rate {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.hour-rate {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stepper input {
+  width: 100%;
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 6px 4px;
+  color: var(--text);
+  background: transparent;
+}
+
+.stepper input:focus {
+  outline: none;
+}
+
+.step-btn {
+  border: none;
+  background: var(--surface-alt);
+  width: 34px;
+  height: 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.step-btn:hover {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.saturday-box {
+  margin-top: 12px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saturday-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.saturday-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.saturday-rule {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.saturday-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.saturday-footer {
+  display: flex;
+  align-items: center;
+}
+
+.extra-details {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.extra-details summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.extra-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.extra-row .input-field {
+  max-width: 140px;
+}
+
+/* HERO CARD */
+.hero-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+  border: none;
+}
+
+.hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hero-label {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.hero-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.hero-amount {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #34d399;
+}
+
+.hero-exact {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.delta-pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(52, 211, 153, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.kpi-label {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.kpi strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.text-emerald {
+  color: #34d399;
+}
+
+.text-rose {
+  color: #fb7185;
+}
+
+.composition-wrap {
+  margin-top: 16px;
+}
+
+.composition-bar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.comp-seg {
+  height: 100%;
+  transition: width 0.25s ease;
+}
+
+.composition-legend {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11.5px;
+  color: #cbd5e1;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+/* THRESHOLDS */
+.thresholds-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.threshold-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.threshold-desc {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* TABLES */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.data-table th {
+  text-align: left;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.data-table tfoot td {
+  padding: 12px 10px 4px;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  font-weight: 700;
+}
+
+.data-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-detail {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.net-strong {
+  font-weight: 700;
+  color: var(--emerald);
+}
+
+/* MARGINAL GRID */
+.marginal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.marginal-pill {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.marginal-pill span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.marginal-pill strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* EXPANDABLE PAYSLIP */
+.details-summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 14.5px;
+  list-style: none;
+}
+
+.details-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.payslip-breakdown {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.breakdown-col h3 {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.breakdown-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed #eef2f7;
+}
+
+.breakdown-line.total {
+  font-weight: 700;
+  border-bottom: none;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* SETTINGS */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.add-country-form {
+  display: grid;
+  grid-template-columns: 1.2fr 100px 1.2fr auto;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.countries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.country-item {
+  display: grid;
+  grid-template-columns: 1.2fr 95px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.info-banner {
+  background: var(--primary-soft);
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  border-radius: 12px;
+  padding: 11px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.backup-card {
+  margin-bottom: 20px;
+}
+
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.backup-row h2 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.backup-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.config-status {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--emerald);
+}
+
+.guide-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hero-right-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-hero {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 6px 11px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.btn-hero:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .topbar,
+  .col-inputs,
+  .info-banner,
+  .hero-actions,
+  .details-hint,
+  .thresholds-card {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border);
+  }
+  .main-container {
+    padding: 0;
+    max-width: 100%;
+  }
+  .sim-grid {
+    display: block;
+  }
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+    margin-bottom: 12px;
+  }
+}
+
+.onboarding-card {
+  margin-bottom: 20px;
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.onboarding-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.onboarding-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.onboarding-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.onboarding-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--indigo));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.onboarding-step strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+.onboarding-step p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.onboarding-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.calibration-card {
+  margin-bottom: 20px;
+}
+
+.payslip-map {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cal-section {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 14px;
+}
+
+.cal-section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.cal-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.cal-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.cal-total-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cal-total-input {
+  max-width: 160px;
+  font-weight: 700;
+}
+
+.cal-code {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  background: #e2e8f0;
+  color: #334155;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+.cal-inline-btn {
+  display: flex;
+  gap: 6px;
+}
+
+.cal-verify-box {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.cal-verify-grid {
+  display: grid;
+  grid-template-columns: 180px 210px 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.cal-check-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.cal-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 980px) {
+  .sim-grid,
+  .settings-grid,
+  .payslip-breakdown,
+  .thresholds-card,
+  .onboarding-steps,
+  .cal-grid-4,
+  .cal-grid-3,
+  .cal-verify-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .main-container {
+    padding: 14px;
+  }
+  .hours-grid,
+  .add-country-form,
+  .country-item,
+  .profile-form,
+  .trip-row-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">€</div>
+          <div>
+            <h1>Simulatore Cedolino</h1>
+            <p id="header-profile-summary" class="brand-sub">Caricamento profilo…</p>
+          </div>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sezioni applicazione">
+          <button class="tab-btn active" data-tab="sim" role="tab" aria-selected="true">Simulatore</button>
+          <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Nazioni &amp; Profilo</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <!-- TAB 1: SIMULATORE -->
+      <section id="tab-sim" class="tab-panel active">
+        <div id="example-banner" class="info-banner" style="display: none;">
+          <div>
+            <strong>Nessuna retribuzione base configurata:</strong> vai su
+            <button id="btn-go-settings" type="button" class="link-btn">Nazioni &amp; Profilo</button>
+            per inserire i dati della tua busta paga (oppure importa il tuo file <code>.json</code>).
+          </div>
+          <button id="btn-dismiss-banner" type="button" class="btn btn-danger-ghost" title="Chiudi avviso">×</button>
+        </div>
+        <div class="sim-grid">
+          <!-- COLONNA INPUT -->
+          <div class="col-inputs">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Mese di riferimento</h2>
+                  <p class="card-sub">Regola automaticamente le rate di addizionali locali</p>
+                </div>
+                <button id="btn-reset-sim" class="btn btn-ghost btn-sm" type="button" title="Azzera tutte le variabili">Azzera</button>
+              </div>
+              <div class="month-row">
+                <select id="sim-month" class="input-select" aria-label="Mese di riferimento"></select>
+                <span id="sim-month-tax-note" class="pill pill-muted">Addizionali attive</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Trasferte</h2>
+                  <p class="card-sub">Aggiungi una o più trasferte nel mese (es. 14 gg in Grecia)</p>
+                </div>
+                <button id="btn-add-trip" class="btn btn-primary btn-sm" type="button">+ Aggiungi trasferta</button>
+              </div>
+              <div id="trips-container" class="trips-list"></div>
+              <div id="trips-empty" class="empty-state">
+                Nessuna trasferta inserita. Clicca <strong>+ Aggiungi trasferta</strong> per simulare una trasferta.
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Ore Viaggio &amp; Straordinari</h2>
+                  <p class="card-sub">Inserisci le ore previste nel mese</p>
+                </div>
+              </div>
+              <div class="hours-grid">
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-viaggio">Ore viaggio <span class="badge-rate">85%</span></label>
+                    <span id="rate-viaggio" class="hour-rate">16,54 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-viaggio" data-delta="-1">−</button>
+                    <input id="inp-viaggio" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-viaggio" data-delta="1">+</button>
+                  </div>
+                </div>
+
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-str-fer">Straord. feriale <span class="badge-rate">+25%</span></label>
+                    <span id="rate-str-fer" class="hour-rate">24,32 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-str-fer" data-delta="-1">−</button>
+                    <input id="inp-str-fer" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-str-fer" data-delta="1">+</button>
+                  </div>
+                </div>
+
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-str-fest">Straord. festivo <span class="badge-rate">+45%</span></label>
+                    <span id="rate-str-fest" class="hour-rate">28,21 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-str-fest" data-delta="-1">−</button>
+                    <input id="inp-str-fest" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-str-fest" data-delta="1">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="saturday-box">
+                <div class="saturday-head">
+                  <div>
+                    <span class="saturday-title">Lavoro di Sabato</span>
+                    <span class="saturday-rule">CCNL Artigiani: prime 3h/sabato al +25%, dalla 4ª al +50%</span>
+                  </div>
+                  <span id="rate-str-sab" class="hour-rate">29,18 €/h (+50%)</span>
+                </div>
+                <div class="saturday-inputs">
+                  <div class="field-group">
+                    <label for="inp-sab-ore">Ore totali sabato</label>
+                    <div class="stepper">
+                      <button type="button" class="step-btn" data-target="inp-sab-ore" data-delta="-1">−</button>
+                      <input id="inp-sab-ore" type="number" min="0" step="0.5" value="0" />
+                      <button type="button" class="step-btn" data-target="inp-sab-ore" data-delta="1">+</button>
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <label for="inp-sab-num">N° sabati lavorati</label>
+                    <div class="stepper">
+                      <button type="button" class="step-btn" data-target="inp-sab-num" data-delta="-1">−</button>
+                      <input id="inp-sab-num" type="number" min="1" step="1" value="1" />
+                      <button type="button" class="step-btn" data-target="inp-sab-num" data-delta="1">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="saturday-footer">
+                  <span id="sabato-split-badge" class="pill pill-muted">0 h · inserisci le ore del sabato</span>
+                </div>
+              </div>
+
+              <details class="extra-details">
+                <summary>Voci nette extra / Rimborso 730 (opzionale)</summary>
+                <div class="extra-row">
+                  <label for="inp-extra-netto">Importo netto aggiuntivo (€)</label>
+                  <input id="inp-extra-netto" class="input-field" type="number" step="1" value="0" />
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <!-- COLONNA RISULTATI -->
+          <div class="col-results">
+            <div id="print-header" class="print-only"></div>
+            <!-- HERO CARD -->
+            <div class="card hero-card">
+              <div class="hero-top">
+                <div>
+                  <span class="hero-label">Netto Stimato in Busta</span>
+                  <div class="hero-amount-row">
+                    <span id="res-netto-arrot" class="hero-amount">€ 2.159</span>
+                    <span id="res-netto-esatto" class="hero-exact">(esatto € 2.158,45)</span>
+                  </div>
+                </div>
+                <div class="hero-right-actions">
+                  <div class="hero-delta-box">
+                    <span id="res-delta-base" class="delta-pill">+€ 0,00 vs mese base</span>
+                  </div>
+                  <div class="hero-actions">
+                    <button id="btn-print-payslip" class="btn btn-hero" type="button" title="Stampa o salva come PDF">Stampa / PDF</button>
+                    <button id="btn-save-jpg" class="btn btn-hero" type="button" title="Scarica immagine JPG riepilogativa">Salva JPG</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi-strip">
+                <div class="kpi">
+                  <span class="kpi-label">Competenze Lorde</span>
+                  <strong id="res-lordo-tot">€ 3.365,78</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Quota Esente</span>
+                  <strong id="res-esente-tot" class="text-emerald">€ 0,00</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Trattenute Totali</span>
+                  <strong id="res-trattenute-tot" class="text-rose">€ 1.207,33</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Resa Netta Globale</span>
+                  <strong id="res-resa-pct">64,1%</strong>
+                </div>
+              </div>
+
+              <div class="composition-wrap">
+                <div id="composition-bar" class="composition-bar" aria-label="Composizione del netto"></div>
+                <div id="composition-legend" class="composition-legend"></div>
+              </div>
+            </div>
+
+            <!-- SOGLIE FISCALI -->
+            <div class="card thresholds-card">
+              <div class="threshold-item">
+                <div class="threshold-head">
+                  <span>Scaglione IRPEF corrente</span>
+                  <strong id="thr-irpef-badge" class="pill pill-blue">33%</strong>
+                </div>
+                <p id="thr-irpef-desc" class="threshold-desc"></p>
+              </div>
+              <div class="threshold-item">
+                <div class="threshold-head">
+                  <span>Contributo aggiuntivo IVS 1% (&gt; 4.685 €)</span>
+                  <strong id="thr-ivs-badge" class="pill pill-muted">Non attivo</strong>
+                </div>
+                <p id="thr-ivs-desc" class="threshold-desc"></p>
+              </div>
+            </div>
+
+            <!-- NETTO PER SINGOLA VOCE -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Netto di ogni singola voce</h2>
+                  <p class="card-sub">Quanto entra realmente in tasca per ciascuna voce inserita</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Voce</th>
+                      <th class="num">Lordo</th>
+                      <th class="num">Esente</th>
+                      <th class="num">Trattenute</th>
+                      <th class="num">Netto €</th>
+                      <th class="num">% Netta</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemized-tbody"></tbody>
+                  <tfoot id="itemized-tfoot"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- VALORE MARGINALE LIVE -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Quanto vale adesso +1 ora / +1 giorno</h2>
+                  <p class="card-sub">Guadagno netto reale al tuo scaglione fiscale attuale</p>
+                </div>
+              </div>
+              <div id="marginal-grid" class="marginal-grid"></div>
+            </div>
+
+            <!-- CEDOLINO COMPLETO ESPANDIBILE -->
+            <details class="card details-payslip">
+              <summary class="details-summary">
+                <span>Dettaglio Cedolino Completo</span>
+                <span class="details-hint">Clicca per espandere</span>
+              </summary>
+              <div id="full-payslip-breakdown" class="payslip-breakdown"></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: NAZIONI & PROFILO -->
+      <section id="tab-settings" class="tab-panel">
+        <div id="onboarding-card" class="card onboarding-card" style="display: none;">
+          <div class="onboarding-head">
+            <div>
+              <h2>Benvenuto nel Simulatore Cedolino</h2>
+              <p class="card-sub">Stima in anticipo il tuo netto mensile con trasferte, ore viaggio e straordinari (regola sabato CCNL Artigiani inclusa). Tutti i dati restano privati nel tuo browser.</p>
+            </div>
+            <button id="btn-dismiss-onboarding" type="button" class="btn btn-danger-ghost" title="Chiudi guida">×</button>
+          </div>
+          <div class="onboarding-steps">
+            <div class="onboarding-step">
+              <span class="step-num">1</span>
+              <div>
+                <strong>Configura la tua paga</strong>
+                <p>Inserisci Paga base, Scatti, Superminimo, E.R.V. e Addizionali dalla tua busta paga (o importa un <code>.json</code>).</p>
+              </div>
+            </div>
+            <div class="onboarding-step">
+              <span class="step-num">2</span>
+              <div>
+                <strong>Aggiungi le tue diarie</strong>
+                <p>Salva le nazioni in cui vai spesso in trasferta (puoi aggiungerle o modificarle anche in seguito).</p>
+              </div>
+            </div>
+            <div class="onboarding-step">
+              <span class="step-num">3</span>
+              <div>
+                <strong>Simula e salva il mese</strong>
+                <p>Inserisci trasferte e ore nel Simulatore, scopri il netto di ogni voce e salva il riepilogo in JPG o PDF.</p>
+              </div>
+            </div>
+          </div>
+          <div class="onboarding-footer">
+            <button id="btn-finish-onboarding" type="button" class="btn btn-primary">Inizia a simulare →</button>
+          </div>
+        </div>
+
+        <div id="calibration-card" class="card calibration-card">
+          <div class="card-header">
+            <div>
+              <h2>Calibrazione Rapida da Busta Paga (100% offline)</h2>
+              <p class="card-sub">Copia i numeri dai riquadri della tua ultima busta paga (meglio se un mese senza trasferte né straordinari) per tarare e verificare il simulatore.</p>
+            </div>
+          </div>
+
+          <div class="payslip-map">
+            <div class="cal-section">
+              <div class="cal-section-title">1 · Testata in alto (Retribuzione fissa mensile)</div>
+              <div class="cal-grid-4">
+                <div class="field-group">
+                  <label for="cal-paga-base">Paga Base (€)</label>
+                  <input id="cal-paga-base" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-scatti">Scatti (€)</label>
+                  <input id="cal-scatti" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-superminimo">Superm. Assor. (€)</label>
+                  <input id="cal-superminimo" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-erv">E.R.V. (€)</label>
+                  <input id="cal-erv" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+              </div>
+              <div class="cal-total-row">
+                <label for="cal-retrib-tot"><strong>= Retribuzione Totale (€)</strong> <span class="card-sub">(puoi anche inserire solo questo valore)</span></label>
+                <input id="cal-retrib-tot" class="input-field cal-total-input" type="number" min="0" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <div class="cal-section">
+              <div class="cal-section-title">2 · Corpo del cedolino (Trattenute locali e reddito)</div>
+              <div class="cal-grid-3">
+                <div class="field-group">
+                  <label for="cal-add-reg"><span class="cal-code">2.5994</span> Addiz. Regionale (€)</label>
+                  <input id="cal-add-reg" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-add-com"><span class="cal-code">2.5995</span> Addiz. Comunale (€)</label>
+                  <input id="cal-add-com" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-acc-com"><span class="cal-code">2.5998</span> Acconto Comunale (€)</label>
+                  <input id="cal-acc-com" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-ebav"><span class="cal-code">2.0165-67</span> EBAV dip. (€)</label>
+                  <div class="cal-inline-btn">
+                    <input id="cal-ebav" class="input-field" type="number" min="0" step="0.01" value="0" />
+                    <button id="btn-ebav-std" type="button" class="btn btn-ghost btn-sm" title="Imposta quota standard 3,85 €">3,85 €</button>
+                  </div>
+                </div>
+                <div class="field-group">
+                  <label for="cal-reddito-annuo"><span class="cal-code">2.6082</span> Reddito teorico annuo (€)</label>
+                  <input id="cal-reddito-annuo" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = auto" />
+                </div>
+              </div>
+            </div>
+
+            <div class="cal-section cal-verify-box">
+              <div class="cal-section-title">3 · Verifica immediata con la tua busta paga (opzionale)</div>
+              <div class="cal-verify-grid">
+                <div class="field-group">
+                  <label for="cal-mese">Mese della busta paga</label>
+                  <select id="cal-mese" class="input-select"></select>
+                </div>
+                <div class="field-group">
+                  <label for="cal-netto-reale">Netto reale sulla busta paga (€)</label>
+                  <input id="cal-netto-reale" class="input-field" type="number" min="0" step="0.01" placeholder="Es. 2159" />
+                </div>
+                <div id="cal-check-result" class="cal-check-result">
+                  <span class="pill pill-muted">Inserisci i dati per vedere il netto base calcolato</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-footer">
+            <button id="btn-apply-calibration" type="button" class="btn btn-primary">Applica al profilo e vai al Simulatore →</button>
+          </div>
+        </div>
+
+        <div class="card backup-card">
+          <div class="backup-row">
+            <div>
+              <h2>Configurazione Personale (.json)</h2>
+              <p class="card-sub">I tuoi dati restano salvati solo su questo browser. Esporta o importa un file <code>.json</code> per backup o per spostarli su un altro dispositivo.</p>
+            </div>
+            <div class="backup-actions">
+              <button id="btn-export-config" class="btn btn-ghost" type="button">Esporta .json</button>
+              <label class="btn btn-primary" for="inp-import-config">Importa .json</label>
+              <input id="inp-import-config" type="file" accept=".json,application/json" style="display: none;" />
+            </div>
+          </div>
+          <p id="config-status-msg" class="config-status" style="display: none;"></p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Rubrica Nazioni &amp; Diarie</h2>
+                <p class="card-sub">Aggiungi le tue destinazioni abituali: vengono salvate automaticamente nel browser</p>
+              </div>
+            </div>
+
+            <form id="form-add-country" class="add-country-form">
+              <input id="new-country-name" class="input-field" type="text" placeholder="Es. Grecia, Germania, Spagna…" required />
+              <input id="new-country-diaria" class="input-field" type="number" min="0" step="0.01" placeholder="Diaria €/gg" required />
+              <select id="new-country-tipo" class="input-select">
+                <option value="estero">Estero (esente 77,47 €)</option>
+                <option value="italia">Italia (esente 46,48 €)</option>
+              </select>
+              <button class="btn btn-primary" type="submit">Aggiungi</button>
+            </form>
+
+            <div id="countries-list" class="countries-list"></div>
+            <div id="countries-empty" class="empty-state" style="display: none;">
+              Nessuna nazione salvata. Aggiungi qui le tue destinazioni abituali con la diaria giornaliera.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Parametri Retributivi</h2>
+                <p class="card-sub">Inserisci i valori della tua busta paga per ottenere il calcolo esatto</p>
+              </div>
+              <button id="btn-reset-profile" class="btn btn-ghost btn-sm" type="button">Azzera dati</button>
+            </div>
+            <form id="form-profile" class="profile-form"></form>
+            <details class="extra-details">
+              <summary>Dove trovo questi dati nella mia busta paga?</summary>
+              <ul class="guide-list">
+                <li><strong>Paga Base, Scatti, Superminimo, E.R.V.</strong>: nella testata in alto della busta paga (sotto i dati anagrafici).</li>
+                <li><strong>Addizionale Regionale / Comunale / Acconto</strong>: nel corpo del cedolino (voci trattenute mensili locali).</li>
+                <li><strong>Reddito annuo stimato</strong>: lascia <code>0</code> per la stima automatica (13 × retribuzione fissa) oppure inserisci il tuo reddito teorico annuo per il calcolo esatto delle detrazioni (0 € oltre 50.000 €).</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+(() => {
+  'use strict';
+
+/**
+ * Profilo vuoto di partenza (tutti gli importi azzerati, zero esempi)
+ * per la distribuzione ai colleghi.
+ */
+
+const DEFAULT_PROFILE = {
+  azienda: '',
+  ccnl: 'CCNL Metalmeccanico Artigianato',
+  pagaBase: 0,
+  scatti: 0,
+  superminimo: 0,
+  erv: 0,
+  divisoreOrario: 173,
+  inpsRate: 0.0919,
+  ivs1Threshold: 4685.0,
+  ivs1Rate: 0.01,
+  fsbaRate: 0.0015,
+  ebavFisso: 0,
+  addRegionale: 0,
+  addComunaleSaldo: 0,
+  addComunaleAcconto: 0,
+  redditoAnnuoStimato: 0,
+};
+
+const DEFAULT_COUNTRIES = [];
+
+const MONTHS_IT = [
+  'Gennaio',
+  'Febbraio',
+  'Marzo',
+  'Aprile',
+  'Maggio',
+  'Giugno',
+  'Luglio',
+  'Agosto',
+  'Settembre',
+  'Ottobre',
+  'Novembre',
+  'Dicembre',
+];
+
+
+/**
+ * Motore di calcolo fiscale e contributivo 2026 per cedolino mensile
+ * (CCNL Metalmeccanico Artigianato - IRPEF e detrazioni art. 13 TUIR).
+ * Modulo ES puro, privo di dipendenze DOM.
+ */
+
+const EXEMPTION_LIMITS = {
+  estero: {
+    full: 77.47,
+    rid1_3: 51.65,
+    rid2_3: 25.82,
+  },
+  italia: {
+    full: 46.48,
+    rid1_3: 30.99,
+    rid2_3: 15.49,
+  },
+};
+
+const HOURLY_MULTIPLIERS = {
+  oreViaggio: 0.85,
+  straordFeriale: 1.25,
+  straordFestivo: 1.45,
+  straordSabato: 1.50,
+};
+
+const IRPEF_MONTHLY_BRACKETS = {
+  b1: 28000 / 12, // 2333.3333...
+  b2: 50000 / 12, // 4166.6666...
+  r1: 0.23,
+  r2: 0.33,
+  r3: 0.43,
+};
+
+/**
+ * Arrotonda un numero a 2 decimali (centesimi di euro).
+ * @param {number} n
+ * @returns {number}
+ */
+function round2(n) {
+  return Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+}
+
+/**
+ * Restituisce la franchigia giornaliera esente TUIR (art. 51 comma 5).
+ * @param {'estero'|'italia'} tipo
+ * @param {'full'|'rid1_3'|'rid2_3'} regime
+ * @returns {number}
+ */
+function getExemptionLimit(tipo = 'estero', regime = 'full') {
+  const byType = EXEMPTION_LIMITS[tipo] || EXEMPTION_LIMITS.estero;
+  return byType[regime] ?? byType.full;
+}
+
+/**
+ * Ripartisce le ore lavorate di sabato secondo il CCNL Metalmeccanico Artigianato:
+ * prime 3 ore per ciascun sabato al +25%, dalla 4ª ora in poi al +50%.
+ * @param {number} oreSabatoTotali
+ * @param {number} numSabati
+ */
+function splitSaturdayHours(oreSabatoTotali = 0, numSabati = 1) {
+  const ore = Math.max(0, Number(oreSabatoTotali) || 0);
+  if (ore <= 0) {
+    return { oreTotali: 0, numSabati: Math.max(1, Math.floor(Number(numSabati) || 1)), ore25: 0, ore50: 0 };
+  }
+  const n = Math.max(1, Math.floor(Number(numSabati) || 1));
+  const ore25 = round2(Math.min(ore, n * 3));
+  const ore50 = round2(Math.max(0, ore - ore25));
+  return { oreTotali: ore, numSabati: n, ore25, ore50 };
+}
+
+/**
+ * Calcola la detrazione mensile per lavoro dipendente (art. 13 TUIR)
+ * in base al reddito annuo stimato. Oltre 50.000 € è 0 €.
+ * @param {number} annualIncome
+ * @returns {number}
+ */
+function calculateMonthlyEmployeeDeduction(annualIncome) {
+  const r = Math.max(0, Number(annualIncome) || 0);
+  if (r === 0 || r > 50000) return 0;
+  let annua = 0;
+  if (r <= 15000) {
+    annua = 1955;
+  } else if (r <= 28000) {
+    annua = 1910 + 1190 * ((28000 - r) / 13000);
+  } else {
+    annua = 1910 * ((50000 - r) / 22000);
+  }
+  return round2(annua / 12);
+}
+
+/**
+ * Calcola la retribuzione fissa mensile e le tariffe orarie dal profilo.
+ * @param {object} profile
+ */
+function getProfileRates(profile) {
+  const baseLordo = round2(
+    Number(profile.pagaBase) +
+      Number(profile.scatti) +
+      Number(profile.superminimo) +
+      Number(profile.erv)
+  );
+  const divisoreOrario = Number(profile.divisoreOrario) || 173;
+  const tariffaOraria = baseLordo / divisoreOrario;
+  return {
+    baseLordo,
+    tariffaOraria,
+    tariffe: {
+      oreViaggio: tariffaOraria * HOURLY_MULTIPLIERS.oreViaggio,
+      straordFeriale: tariffaOraria * HOURLY_MULTIPLIERS.straordFeriale,
+      straordFestivo: tariffaOraria * HOURLY_MULTIPLIERS.straordFestivo,
+      straordSabato: tariffaOraria * HOURLY_MULTIPLIERS.straordSabato,
+    },
+  };
+}
+
+/**
+ * Restituisce le addizionali applicate al mese indicato (1..12).
+ * @param {number} mese
+ * @param {object} profile
+ * @param {object} input
+ */
+function getLocalTaxesForMonth(mese, profile, input = {}) {
+  const m = Number(mese) || 1;
+  const addReg =
+    input.addRegionaleOverride !== undefined
+      ? Number(input.addRegionaleOverride)
+      : m <= 11
+      ? Number(profile.addRegionale)
+      : 0;
+  const addCom =
+    input.addComunaleOverride !== undefined
+      ? Number(input.addComunaleOverride)
+      : m <= 11
+      ? Number(profile.addComunaleSaldo)
+      : 0;
+  const accCom =
+    input.accComunaleOverride !== undefined
+      ? Number(input.accComunaleOverride)
+      : m >= 2 && m <= 11
+      ? Number(profile.addComunaleAcconto)
+      : 0;
+
+  return {
+    addReg: round2(addReg),
+    addCom: round2(addCom),
+    accCom: round2(accCom),
+  };
+}
+
+/**
+ * Calcola tutte le voci del cedolino.
+ * @param {object} input
+ * @param {object} profile
+ */
+function calculatePayslip(input = {}, profile) {
+  const { baseLordo, tariffaOraria, tariffe } = getProfileRates(profile);
+
+  const oreViaggio = Math.max(0, Number(input.oreViaggio) || 0);
+  const straordFeriale = Math.max(0, Number(input.straordFeriale) || 0);
+  const straordFestivo = Math.max(0, Number(input.straordFestivo) || 0);
+  const straordSabato = Math.max(0, Number(input.straordSabato) || 0);
+  const sabatoSplit = splitSaturdayHours(input.oreSabatoTotali, input.numSabati);
+  const totStr25 = straordFeriale + sabatoSplit.ore25;
+  const totStr50 = straordSabato + sabatoSplit.ore50;
+
+  const premio = Math.max(0, Number(input.premio) || 0);
+  const extraNetto = Number(input.extraNetto) || 0;
+  const arrotPrec = Number(input.arrotPrec) || 0;
+
+  const lordoViaggio = round2(oreViaggio * tariffe.oreViaggio);
+  const lordoStrFer = round2(totStr25 * tariffe.straordFeriale);
+  const lordoStrFest = round2(straordFestivo * tariffe.straordFestivo);
+  const lordoStrSab = round2(totStr50 * tariffe.straordSabato);
+
+  const trasferteRaw = Array.isArray(input.trasferte) ? input.trasferte : [];
+  const trasferteDettaglio = trasferteRaw.map((t, idx) => {
+    const giorni = Math.max(0, Number(t.giorni) || 0);
+    const diaria = Math.max(0, Number(t.diaria) || 0);
+    const arretratiEsenti = Math.max(0, Number(t.arretratiEsenti) || 0);
+    const tipo = t.tipo === 'italia' ? 'italia' : 'estero';
+    const regime = t.regime || 'full';
+    const soglia = getExemptionLimit(tipo, regime);
+
+    const lordo = round2(giorni * diaria + arretratiEsenti);
+    const imponibile = round2(giorni * Math.max(0, diaria - soglia));
+    const esente = round2(lordo - imponibile);
+
+    return {
+      id: t.id || `trasf-${idx}`,
+      label: t.label || (tipo === 'italia' ? 'Trasferta Italia' : 'Trasferta Estero'),
+      giorni,
+      diaria,
+      tipo,
+      regime,
+      soglia,
+      arretratiEsenti,
+      lordo,
+      imponibile,
+      esente,
+    };
+  });
+
+  const trasfLordoTot = round2(
+    trasferteDettaglio.reduce((sum, t) => sum + t.lordo, 0)
+  );
+  const trasfImponibileTot = round2(
+    trasferteDettaglio.reduce((sum, t) => sum + t.imponibile, 0)
+  );
+  const trasfEsenteTot = round2(
+    trasferteDettaglio.reduce((sum, t) => sum + t.esente, 0)
+  );
+
+  const imponibileEsatto = round2(
+    baseLordo +
+      lordoViaggio +
+      lordoStrFer +
+      lordoStrFest +
+      lordoStrSab +
+      premio +
+      trasfImponibileTot
+  );
+
+  // L'imponibile previdenziale INPS in busta è arrotondato all'euro intero
+  const imponibilePrevidenziale = Math.round(imponibileEsatto);
+
+  const inps = round2(imponibilePrevidenziale * Number(profile.inpsRate));
+  const ivs1Threshold = Number(profile.ivs1Threshold);
+  const eccedenzaIvs1 = Math.max(0, imponibilePrevidenziale - ivs1Threshold);
+  const ivs1 = round2(eccedenzaIvs1 * Number(profile.ivs1Rate));
+  const totaleContributiInps = round2(inps + ivs1);
+
+  const imponibileFiscale = round2(imponibileEsatto - totaleContributiInps);
+
+  const { b1, b2, r1, r2, r3 } = IRPEF_MONTHLY_BRACKETS;
+  const irpefScaglione1 = Math.min(imponibileFiscale, b1) * r1;
+  const irpefScaglione2 =
+    Math.max(0, Math.min(imponibileFiscale, b2) - b1) * r2;
+  const irpefScaglione3 = Math.max(0, imponibileFiscale - b2) * r3;
+  const irpefLorda = round2(irpefScaglione1 + irpefScaglione2 + irpefScaglione3);
+  const hasDetrOverride = input.detrazioniOverride !== undefined;
+  const redditoAnnuoStimato =
+    Number(profile.redditoAnnuoStimato) > 0
+      ? Number(profile.redditoAnnuoStimato)
+      : round2(baseLordo * 13);
+  const detrazioni = hasDetrOverride
+    ? Number(input.detrazioniOverride)
+    : calculateMonthlyEmployeeDeduction(redditoAnnuoStimato);
+  const irpefNetta = hasDetrOverride
+    ? round2(irpefLorda - detrazioni)
+    : Math.max(0, round2(irpefLorda - detrazioni));
+
+  const fsba = round2(imponibilePrevidenziale * Number(profile.fsbaRate));
+  const ebav = round2(Number(profile.ebavFisso));
+
+  const mese = Number(input.mese) || 1;
+  const { addReg, addCom, accCom } = getLocalTaxesForMonth(mese, profile, input);
+  const totaleAddizionali = round2(addReg + addCom + accCom);
+
+  const totaleCompetenze = round2(
+    baseLordo +
+      lordoViaggio +
+      lordoStrFer +
+      lordoStrFest +
+      lordoStrSab +
+      premio +
+      trasfLordoTot +
+      extraNetto
+  );
+
+  const totaleTrattenute = round2(
+    totaleContributiInps + irpefNetta + ebav + fsba + totaleAddizionali
+  );
+
+  const nettoEsatto = round2(totaleCompetenze - totaleTrattenute);
+
+  // Data Services arrotonda sempre per eccesso all'euro intero,
+  // recuperando l'arrotondamento anticipato il mese precedente (arrotPrec).
+  const nettoPreArrot = round2(nettoEsatto - arrotPrec);
+  const nettoArrotondato = Math.ceil(nettoPreArrot - 1e-9) || 0;
+  const arrotCurr = round2(nettoArrotondato - nettoPreArrot) || 0;
+
+  const aliquotaIrpefMarginale =
+    imponibileFiscale > b2 ? r3 : imponibileFiscale > b1 ? r2 : r1;
+
+  return {
+    mese,
+    baseLordo,
+    tariffaOraria,
+    tariffe,
+    sabatoSplit,
+    competenze: {
+      baseLordo,
+      lordoViaggio,
+      lordoStrFer,
+      lordoStrFest,
+      lordoStrSab,
+      premio,
+      trasfLordoTot,
+      trasfImponibileTot,
+      trasfEsenteTot,
+      extraNetto,
+      trasferteDettaglio,
+    },
+    imponibili: {
+      imponibileEsatto,
+      imponibilePrevidenziale,
+      imponibileFiscale,
+      eccedenzaIvs1,
+    },
+    contributi: {
+      inps,
+      ivs1,
+      totaleContributiInps,
+      fsba,
+      ebav,
+    },
+    irpef: {
+      scaglione1: round2(irpefScaglione1),
+      scaglione2: round2(irpefScaglione2),
+      scaglione3: round2(irpefScaglione3),
+      irpefLorda,
+      detrazioni,
+      irpefNetta,
+      aliquotaMarginale: aliquotaIrpefMarginale,
+    },
+    addizionali: {
+      addReg,
+      addCom,
+      accCom,
+      totaleAddizionali,
+    },
+    totali: {
+      totaleCompetenze,
+      totaleTrattenute,
+      nettoEsatto,
+      arrotPrec,
+      arrotCurr,
+      nettoArrotondato,
+    },
+  };
+}
+
+/**
+ * Calcola il netto effettivo di ogni singola voce tramite accumulo incrementale ordinato.
+ * La somma dei `deltaNetto` di tutte le voci è garantita uguale a `payslip.totali.nettoEsatto`.
+ * @param {object} input
+ * @param {object} profile
+ */
+function calculateItemizedNet(input = {}, profile) {
+  const baseState = {
+    mese: input.mese,
+    trasferte: [],
+    oreViaggio: 0,
+    straordFeriale: 0,
+    straordFestivo: 0,
+    straordSabato: 0,
+    oreSabatoTotali: 0,
+    numSabati: 1,
+    premio: 0,
+    extraNetto: 0,
+    detrazioniOverride: input.detrazioniOverride,
+    addRegionaleOverride: input.addRegionaleOverride,
+    addComunaleOverride: input.addComunaleOverride,
+    accComunaleOverride: input.accComunaleOverride,
+  };
+
+  let prevRes = calculatePayslip(baseState, profile);
+  const items = [
+    {
+      key: 'base',
+      label: 'Stipendio Base Fisso',
+      category: 'base',
+      detail: 'Paga base + scatti + superm. + ERV',
+      lordo: prevRes.baseLordo,
+      esente: 0,
+      imponibile: prevRes.baseLordo,
+      deltaNetto: prevRes.totali.nettoEsatto,
+      trattenute: round2(prevRes.baseLordo - prevRes.totali.nettoEsatto),
+      percentualeNetta:
+        prevRes.baseLordo > 0
+          ? (prevRes.totali.nettoEsatto / prevRes.baseLordo) * 100
+          : 0,
+    },
+  ];
+
+  const currentState = { ...baseState, trasferte: [] };
+
+  const pushStep = (key, label, category, detail, lordo, esente, imponibile) => {
+    const nextRes = calculatePayslip(currentState, profile);
+    const deltaNetto = round2(
+      nextRes.totali.nettoEsatto - prevRes.totali.nettoEsatto
+    );
+    const trattenute = round2(lordo - deltaNetto);
+    items.push({
+      key,
+      label,
+      category,
+      detail,
+      lordo: round2(lordo),
+      esente: round2(esente),
+      imponibile: round2(imponibile),
+      deltaNetto,
+      trattenute,
+      percentualeNetta: lordo > 0 ? (deltaNetto / lordo) * 100 : 0,
+    });
+    prevRes = nextRes;
+  };
+
+  // 1. Trasferte (nell'ordine inserito)
+  const trasferte = Array.isArray(input.trasferte) ? input.trasferte : [];
+  trasferte.forEach((t, idx) => {
+    const giorni = Math.max(0, Number(t.giorni) || 0);
+    const diaria = Math.max(0, Number(t.diaria) || 0);
+    const arretratiEsenti = Math.max(0, Number(t.arretratiEsenti) || 0);
+    if (giorni === 0 && arretratiEsenti === 0) return;
+
+    currentState.trasferte = [...currentState.trasferte, t];
+    const tipo = t.tipo === 'italia' ? 'italia' : 'estero';
+    const soglia = getExemptionLimit(tipo, t.regime || 'full');
+    const lordo = round2(giorni * diaria + arretratiEsenti);
+    const imponibile = round2(giorni * Math.max(0, diaria - soglia));
+    const esente = round2(lordo - imponibile);
+    const label = t.label || (tipo === 'italia' ? 'Trasferta Italia' : 'Trasferta Estero');
+    const detail = `${giorni} gg × ${diaria.toFixed(2).replace('.', ',')} €`;
+
+    pushStep(`trasf-${idx}`, label, 'trasferta', detail, lordo, esente, imponibile);
+  });
+
+  // 2. Ore Viaggio (85%)
+  const oreViaggio = Math.max(0, Number(input.oreViaggio) || 0);
+  if (oreViaggio > 0) {
+    currentState.oreViaggio = oreViaggio;
+    const lordo = round2(oreViaggio * prevRes.tariffe.oreViaggio);
+    pushStep(
+      'viaggio',
+      'Ore viaggio (85%)',
+      'viaggio',
+      `${oreViaggio} h`,
+      lordo,
+      0,
+      lordo
+    );
+  }
+
+  // 3. Straordinario Feriale (+25%)
+  const strFer = Math.max(0, Number(input.straordFeriale) || 0);
+  if (strFer > 0) {
+    currentState.straordFeriale = strFer;
+    const lordo = round2(strFer * prevRes.tariffe.straordFeriale);
+    pushStep(
+      'strFer',
+      'Straordinario feriale (+25%)',
+      'straordinario',
+      `${strFer} h`,
+      lordo,
+      0,
+      lordo
+    );
+  }
+
+  // 4. Straordinario Festivo (+45%)
+  const strFest = Math.max(0, Number(input.straordFestivo) || 0);
+  if (strFest > 0) {
+    currentState.straordFestivo = strFest;
+    const lordo = round2(strFest * prevRes.tariffe.straordFestivo);
+    pushStep(
+      'strFest',
+      'Straordinario festivo (+45%)',
+      'straordinario',
+      `${strFest} h`,
+      lordo,
+      0,
+      lordo
+    );
+  }
+
+  // 5. Straordinario Sabato (+50% manuale, usato per storico)
+  const strSab = Math.max(0, Number(input.straordSabato) || 0);
+  if (strSab > 0) {
+    currentState.straordSabato = strSab;
+    const lordo = round2(strSab * prevRes.tariffe.straordSabato);
+    pushStep(
+      'strSab',
+      'Straordinario sabato (+50%)',
+      'straordinario',
+      `${strSab} h`,
+      lordo,
+      0,
+      lordo
+    );
+  }
+
+  // 5b. Straordinario Sabato automatico CCNL (prime 3h/sabato +25%, poi +50%)
+  const oreSabTot = Math.max(0, Number(input.oreSabatoTotali) || 0);
+  if (oreSabTot > 0) {
+    currentState.oreSabatoTotali = oreSabTot;
+    currentState.numSabati = Math.max(1, Math.floor(Number(input.numSabati) || 1));
+    const sab = splitSaturdayHours(oreSabTot, currentState.numSabati);
+    const lordo = round2(
+      sab.ore25 * prevRes.tariffe.straordFeriale +
+        sab.ore50 * prevRes.tariffe.straordSabato
+    );
+    pushStep(
+      'sabatoCCNL',
+      'Straordinario sabato (CCNL)',
+      'straordinario',
+      `${oreSabTot} h (${sab.ore25}h +25% · ${sab.ore50}h +50%)`,
+      lordo,
+      0,
+      lordo
+    );
+  }
+
+  // 6. Premio (usato solo per confronto storico)
+  const premio = Math.max(0, Number(input.premio) || 0);
+  if (premio > 0) {
+    currentState.premio = premio;
+    pushStep('premio', 'Premio', 'premio', 'Importo lordo', premio, 0, premio);
+  }
+
+  // 7. Extra netto (rimborsi / 730)
+  const extraNetto = Number(input.extraNetto) || 0;
+  if (extraNetto !== 0) {
+    currentState.extraNetto = extraNetto;
+    pushStep(
+      'extra',
+      'Voci nette extra / 730',
+      'extra',
+      'Esente imposte',
+      extraNetto,
+      extraNetto,
+      0
+    );
+  }
+
+  return items;
+}
+
+/**
+ * Calcola il valore netto marginale istantaneo (+1 ora / +1 giorno)
+ * e la distanza dalle soglie critiche (IRPEF 43% e IVS 1%).
+ * @param {object} input
+ * @param {object} profile
+ */
+function calculateMarginalRates(input = {}, profile) {
+  const current = calculatePayslip(input, profile);
+  const impPrev = current.imponibili.imponibilePrevidenziale;
+  const impFisc = current.imponibili.imponibileFiscale;
+
+  const { b2 } = IRPEF_MONTHLY_BRACKETS;
+  const ivs1Threshold = Number(profile.ivs1Threshold);
+
+  const distIrpef43 = round2(b2 - impFisc);
+  const distIvs1 = round2(ivs1Threshold - impPrev);
+
+  // Aliquota marginale continua su 1 € imponibile lordo aggiuntivo
+  const inpsM = Number(profile.inpsRate);
+  const ivs1M = impPrev >= ivs1Threshold ? Number(profile.ivs1Rate) : 0;
+  const fsbaM = Number(profile.fsbaRate);
+  const irpefM = current.irpef.aliquotaMarginale;
+
+  // 1 € lordo imponibile paga INPS + IVS1 + FSBA, e sulla parte netta INPS+IVS1 paga IRPEF
+  const netFactorContinuous =
+    1 - inpsM - ivs1M - fsbaM - (1 - inpsM - ivs1M) * irpefM;
+
+  const { tariffe } = current;
+  return {
+    aliquotaIrpefCorrente: Math.round(irpefM * 100),
+    ivs1Attivo: impPrev > ivs1Threshold,
+    distIrpef43,
+    distIvs1,
+    netFactorPercent: round2(netFactorContinuous * 100),
+    perOra: {
+      oreViaggio: round2(tariffe.oreViaggio * netFactorContinuous),
+      straordFeriale: round2(tariffe.straordFeriale * netFactorContinuous),
+      straordFestivo: round2(tariffe.straordFestivo * netFactorContinuous),
+      straordSabato: round2(tariffe.straordSabato * netFactorContinuous),
+    },
+    trasferta: {
+      esteroEntroSoglia: 77.47,
+      estero90: round2(77.47 + (90 - 77.47) * netFactorContinuous),
+      italiaEntroSoglia: 46.48,
+    },
+  };
+}
+
+
+
+
+const STORAGE_COUNTRIES_KEY = 'sim_cedolino_countries_v1';
+const STORAGE_PROFILE_KEY = 'sim_cedolino_profile_v1';
+const STORAGE_BANNER_DISMISSED_KEY = 'sim_cedolino_banner_dismissed_v1';
+const STORAGE_ONBOARDED_KEY = 'sim_cedolino_onboarded_v1';
+
+// ── STATO APPLICAZIONE ──
+let profile = loadProfile();
+let countries = loadCountries();
+
+const simState = {
+  mese: new Date().getMonth() + 1,
+  trasferte: [],
+  oreViaggio: 0,
+  straordFeriale: 0,
+  straordFestivo: 0,
+  oreSabatoTotali: 0,
+  numSabati: 1,
+  extraNetto: 0,
+};
+
+let tripIdCounter = 1;
+
+// ── STORAGE HELPERS ──
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem(STORAGE_PROFILE_KEY);
+    if (raw) {
+      const merged = { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+      if (typeof merged.ccnl === 'string' && (merged.ccnl.includes('Liv.') || merged.ccnl.includes('Artigianato Metalmeccanico'))) {
+        merged.ccnl = DEFAULT_PROFILE.ccnl;
+      }
+      return merged;
+    }
+  } catch {}
+  return { ...DEFAULT_PROFILE };
+}
+
+function saveProfile() {
+  localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profile));
+}
+
+function loadCountries() {
+  try {
+    const raw = localStorage.getItem(STORAGE_COUNTRIES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return DEFAULT_COUNTRIES.map((c) => ({ ...c }));
+}
+
+function saveCountries() {
+  localStorage.setItem(STORAGE_COUNTRIES_KEY, JSON.stringify(countries));
+}
+
+// ── FORMATTING ──
+const fmtEur = (n) =>
+  new Intl.NumberFormat('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(n) || 0);
+
+const fmtEurInt = (n) =>
+  new Intl.NumberFormat('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(n) || 0);
+
+const fmtPct = (n) => `${(Number(n) || 0).toFixed(1).replace('.', ',')}%`;
+
+// ── TABS ──
+function initTabs() {
+  const buttons = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      buttons.forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panels.forEach((p) => {
+        p.classList.toggle('active', p.id === `tab-${target}`);
+      });
+    });
+  });
+}
+
+// ── INIZIALIZZAZIONE SIMULATORE ──
+function initSimControls() {
+  const monthSelect = document.getElementById('sim-month');
+  MONTHS_IT.forEach((name, idx) => {
+    const opt = document.createElement('option');
+    opt.value = String(idx + 1);
+    opt.textContent = name;
+    monthSelect.appendChild(opt);
+  });
+  monthSelect.value = String(simState.mese);
+  monthSelect.addEventListener('change', () => {
+    simState.mese = Number(monthSelect.value);
+    updateSimulation();
+  });
+
+  document.getElementById('btn-reset-sim').addEventListener('click', () => {
+    simState.trasferte = [];
+    simState.oreViaggio = 0;
+    simState.straordFeriale = 0;
+    simState.straordFestivo = 0;
+    simState.oreSabatoTotali = 0;
+    simState.numSabati = 1;
+    simState.extraNetto = 0;
+    syncHourInputsFromState();
+    renderTrips();
+    updateSimulation();
+  });
+
+  document.getElementById('btn-add-trip').addEventListener('click', () => {
+    const firstCountry = countries[0] || {
+      id: 'custom',
+      name: 'Trasferta Estero',
+      diaria: 0,
+      tipo: 'estero',
+      regime: 'full',
+    };
+    simState.trasferte.push({
+      id: `trip-${tripIdCounter++}`,
+      countryId: firstCountry.id,
+      label: firstCountry.name,
+      giorni: 1,
+      diaria: firstCountry.diaria,
+      tipo: firstCountry.tipo,
+      regime: firstCountry.regime || 'full',
+    });
+    renderTrips();
+    updateSimulation();
+  });
+
+  const bindHourInput = (id, key) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      simState[key] = Math.max(0, Number(el.value) || 0);
+      updateSimulation();
+    });
+  };
+  bindHourInput('inp-viaggio', 'oreViaggio');
+  bindHourInput('inp-str-fer', 'straordFeriale');
+  bindHourInput('inp-str-fest', 'straordFestivo');
+  bindHourInput('inp-sab-ore', 'oreSabatoTotali');
+
+  const sabNumEl = document.getElementById('inp-sab-num');
+  sabNumEl.addEventListener('input', () => {
+    simState.numSabati = Math.max(1, Math.floor(Number(sabNumEl.value) || 1));
+    updateSimulation();
+  });
+
+  const extraEl = document.getElementById('inp-extra-netto');
+  extraEl.addEventListener('input', () => {
+    simState.extraNetto = Number(extraEl.value) || 0;
+    updateSimulation();
+  });
+
+  document.querySelectorAll('.step-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const inp = document.getElementById(btn.dataset.target);
+      const minVal = inp.min !== '' ? Number(inp.min) : 0;
+      const delta = Number(btn.dataset.delta);
+      const next = Math.max(minVal, round2((Number(inp.value) || 0) + delta));
+      inp.value = String(next);
+      inp.dispatchEvent(new Event('input'));
+    });
+  });
+}
+
+function syncHourInputsFromState() {
+  document.getElementById('sim-month').value = String(simState.mese);
+  document.getElementById('inp-viaggio').value = String(simState.oreViaggio);
+  document.getElementById('inp-str-fer').value = String(simState.straordFeriale);
+  document.getElementById('inp-str-fest').value = String(simState.straordFestivo);
+  document.getElementById('inp-sab-ore').value = String(simState.oreSabatoTotali);
+  document.getElementById('inp-sab-num').value = String(simState.numSabati);
+  document.getElementById('inp-extra-netto').value = String(simState.extraNetto);
+}
+
+// ── RENDER TRASFERTE ──
+function renderTrips() {
+  const container = document.getElementById('trips-container');
+  const empty = document.getElementById('trips-empty');
+  container.innerHTML = '';
+
+  if (simState.trasferte.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  simState.trasferte.forEach((trip) => {
+    const row = document.createElement('div');
+    row.className = 'trip-row';
+
+    // Top: Select nazione + rimuovi
+    const top = document.createElement('div');
+    top.className = 'trip-row-top';
+
+    const sel = document.createElement('select');
+    sel.className = 'input-select';
+    countries.forEach((c) => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = `${c.name} (${c.diaria.toFixed(2).replace('.', ',')} €/gg · ${c.tipo === 'italia' ? 'Italia' : 'Estero'})`;
+      sel.appendChild(opt);
+    });
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = 'Altra destinazione (manuale)';
+    sel.appendChild(customOpt);
+    sel.value = countries.some((c) => c.id === trip.countryId) ? trip.countryId : 'custom';
+
+    sel.addEventListener('change', () => {
+      trip.countryId = sel.value;
+      const found = countries.find((c) => c.id === sel.value);
+      if (found) {
+        trip.label = found.name;
+        trip.diaria = found.diaria;
+        trip.tipo = found.tipo;
+        trip.regime = found.regime || 'full';
+        renderTrips();
+      } else {
+        trip.label = trip.tipo === 'italia' ? 'Trasferta Italia' : 'Trasferta Estero';
+      }
+      updateSimulation();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn btn-danger-ghost';
+    delBtn.title = 'Rimuovi trasferta';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', () => {
+      simState.trasferte = simState.trasferte.filter((t) => t.id !== trip.id);
+      renderTrips();
+      updateSimulation();
+    });
+
+    top.append(sel, delBtn);
+
+    // Fields: Giorni, Diaria, Tipo + Regime
+    const fields = document.createElement('div');
+    fields.className = 'trip-row-fields';
+
+    const gGroup = document.createElement('div');
+    gGroup.className = 'field-group';
+    gGroup.innerHTML = `<label>Giorni</label>`;
+    const gInp = document.createElement('input');
+    gInp.type = 'number';
+    gInp.min = '0';
+    gInp.step = '1';
+    gInp.className = 'input-field';
+    gInp.value = String(trip.giorni);
+    gInp.addEventListener('input', () => {
+      trip.giorni = Math.max(0, Number(gInp.value) || 0);
+      updateTripBadge(trip, badgeEl);
+      updateSimulation();
+    });
+    gGroup.appendChild(gInp);
+
+    const dGroup = document.createElement('div');
+    dGroup.className = 'field-group';
+    dGroup.innerHTML = `<label>Diaria (€/gg)</label>`;
+    const dInp = document.createElement('input');
+    dInp.type = 'number';
+    dInp.min = '0';
+    dInp.step = '0.5';
+    dInp.className = 'input-field';
+    dInp.value = String(trip.diaria);
+    dInp.addEventListener('input', () => {
+      trip.diaria = Math.max(0, Number(dInp.value) || 0);
+      updateTripBadge(trip, badgeEl);
+      updateSimulation();
+    });
+    dGroup.appendChild(dInp);
+
+    const tGroup = document.createElement('div');
+    tGroup.className = 'field-group';
+    tGroup.innerHTML = `<label>Regime Fiscale</label>`;
+    const tSel = document.createElement('select');
+    tSel.className = 'input-select';
+    tSel.innerHTML = `
+      <option value="estero|full">Estero · esente 77,47 €</option>
+      <option value="estero|rid1_3">Estero (-1/3) · 51,65 €</option>
+      <option value="estero|rid2_3">Estero (-2/3) · 25,82 €</option>
+      <option value="italia|full">Italia · esente 46,48 €</option>
+      <option value="italia|rid1_3">Italia (-1/3) · 30,99 €</option>
+      <option value="italia|rid2_3">Italia (-2/3) · 15,49 €</option>
+    `;
+    tSel.value = `${trip.tipo}|${trip.regime || 'full'}`;
+    tSel.addEventListener('change', () => {
+      const [tipo, regime] = tSel.value.split('|');
+      trip.tipo = tipo;
+      trip.regime = regime;
+      updateTripBadge(trip, badgeEl);
+      updateSimulation();
+    });
+    tGroup.appendChild(tSel);
+
+    fields.append(gGroup, dGroup, tGroup);
+
+    // Footer live badge
+    const footer = document.createElement('div');
+    footer.className = 'trip-row-footer';
+    const badgeEl = document.createElement('span');
+    updateTripBadge(trip, badgeEl);
+    footer.appendChild(badgeEl);
+
+    row.append(top, fields, footer);
+    container.appendChild(row);
+  });
+}
+
+function updateTripBadge(trip, el) {
+  const limit = getExemptionLimit(trip.tipo, trip.regime);
+  const lordo = round2(trip.giorni * trip.diaria);
+  const imponibile = round2(trip.giorni * Math.max(0, trip.diaria - limit));
+  if (imponibile === 0) {
+    el.className = 'pill pill-emerald';
+    el.textContent = `${fmtEur(lordo)} lordi → 100% esenti (netti in busta)`;
+  } else {
+    el.className = 'pill pill-amber';
+    el.textContent = `${fmtEur(lordo)} lordi → ${fmtEur(lordo - imponibile)} esenti · ${fmtEur(imponibile)} tassati`;
+  }
+}
+
+// ── AGGIORNAMENTO RISULTATI ──
+function updateSimulation() {
+  const rates = getProfileRates(profile);
+  document.getElementById(
+    'header-profile-summary'
+  ).textContent = `Base fissa ${fmtEur(rates.baseLordo)}/mese · ${profile.ccnl}`;
+
+  document.getElementById('rate-viaggio').textContent = `${rates.tariffe.oreViaggio.toFixed(2).replace('.', ',')} €/h`;
+  document.getElementById('rate-str-fer').textContent = `${rates.tariffe.straordFeriale.toFixed(2).replace('.', ',')} €/h`;
+  document.getElementById('rate-str-fest').textContent = `${rates.tariffe.straordFestivo.toFixed(2).replace('.', ',')} €/h`;
+  document.getElementById('rate-str-sab').textContent = `${rates.tariffe.straordSabato.toFixed(2).replace('.', ',')} €/h (+50%)`;
+
+  const res = calculatePayslip(simState, profile);
+  const sabBadge = document.getElementById('sabato-split-badge');
+  if (simState.oreSabatoTotali > 0) {
+    const sabWord = res.sabatoSplit.numSabati === 1 ? 'sabato' : 'sabati';
+    sabBadge.className = 'pill pill-blue';
+    sabBadge.textContent = `${res.sabatoSplit.oreTotali} h su ${res.sabatoSplit.numSabati} ${sabWord} → ${res.sabatoSplit.ore25}h al +25% · ${res.sabatoSplit.ore50}h al +50%`;
+  } else {
+    sabBadge.className = 'pill pill-muted';
+    sabBadge.textContent = '0 h · inserisci le ore del sabato';
+  }
+
+  const monthNote = document.getElementById('sim-month-tax-note');
+  if (simState.mese === 1) {
+    monthNote.textContent = 'Addizionali senza acconto (Gennaio)';
+  } else if (simState.mese === 12) {
+    monthNote.textContent = 'Nessuna rata addizionale (Dicembre)';
+  } else {
+    monthNote.textContent = 'Addizionali complete (Reg. + Com. + Acc.)';
+  }
+
+  const baseOnly = calculatePayslip({ mese: simState.mese }, profile);
+  const itemized = calculateItemizedNet(simState, profile);
+  const marginal = calculateMarginalRates(simState, profile);
+
+  // Hero
+  document.getElementById('res-netto-arrot').textContent = fmtEurInt(
+    res.totali.nettoArrotondato
+  );
+  document.getElementById('res-netto-esatto').textContent = `(esatto ${fmtEur(
+    res.totali.nettoEsatto
+  )})`;
+
+  const deltaBase = round2(res.totali.nettoEsatto - baseOnly.totali.nettoEsatto);
+  const deltaSign = deltaBase >= 0 ? '+' : '';
+  document.getElementById(
+    'res-delta-base'
+  ).textContent = `${deltaSign}${fmtEur(deltaBase)} vs mese base`;
+
+  document.getElementById('res-lordo-tot').textContent = fmtEur(
+    res.totali.totaleCompetenze
+  );
+  document.getElementById('res-esente-tot').textContent = fmtEur(
+    res.competenze.trasfEsenteTot + Math.max(0, res.competenze.extraNetto)
+  );
+  document.getElementById('res-trattenute-tot').textContent = fmtEur(
+    res.totali.totaleTrattenute
+  );
+  const resaPct =
+    res.totali.totaleCompetenze > 0
+      ? (res.totali.nettoEsatto / res.totali.totaleCompetenze) * 100
+      : 0;
+  document.getElementById('res-resa-pct').textContent = fmtPct(resaPct);
+
+  // Barra composizione netto
+  renderCompositionBar(itemized, res.totali.nettoEsatto);
+
+  // Soglie fiscali
+  const irpefBadge = document.getElementById('thr-irpef-badge');
+  const irpefDesc = document.getElementById('thr-irpef-desc');
+  irpefBadge.textContent = `${marginal.aliquotaIrpefCorrente}%`;
+  irpefBadge.className =
+    marginal.aliquotaIrpefCorrente >= 43 ? 'pill pill-rose' : 'pill pill-blue';
+  if (marginal.distIrpef43 > 0) {
+    irpefDesc.textContent = `Mancano ${fmtEur(marginal.distIrpef43)} di imponibile fiscale allo scaglione 43%.`;
+  } else {
+    irpefDesc.textContent = `Superata la soglia 4.166,67 € di ${fmtEur(Math.abs(marginal.distIrpef43))}: la quota eccedente è tassata al 43%.`;
+  }
+
+  const ivsBadge = document.getElementById('thr-ivs-badge');
+  const ivsDesc = document.getElementById('thr-ivs-desc');
+  if (marginal.ivs1Attivo) {
+    ivsBadge.textContent = 'Attivo (+1%)';
+    ivsBadge.className = 'pill pill-amber';
+    ivsDesc.textContent = `Imponibile INPS oltre 4.685 € di ${fmtEur(Math.abs(marginal.distIvs1))} (trattenuta extra: ${fmtEur(res.contributi.ivs1)}).`;
+  } else {
+    ivsBadge.textContent = 'Non attivo';
+    ivsBadge.className = 'pill pill-muted';
+    ivsDesc.textContent = `Mancano ${fmtEur(marginal.distIvs1)} di imponibile INPS prima che scatti l'1% aggiuntivo.`;
+  }
+
+  // Tabella netto per singola voce
+  renderItemizedTable(itemized, res);
+
+  // Valore marginale
+  renderMarginalGrid(marginal);
+
+  // Cedolino completo
+  renderFullPayslip(res);
+}
+
+function renderCompositionBar(itemized, totalNet) {
+  const colors = {
+    base: '#3b82f6',
+    trasferta: '#10b981',
+    viaggio: '#06b6d4',
+    straordinario: '#f59e0b',
+    extra: '#8b5cf6',
+  };
+  const labels = {
+    base: 'Stipendio base',
+    trasferta: 'Trasferte',
+    viaggio: 'Ore viaggio',
+    straordinario: 'Straordinari',
+    extra: 'Extra netti',
+  };
+
+  const grouped = {};
+  itemized.forEach((item) => {
+    if (item.deltaNetto > 0) {
+      grouped[item.category] = (grouped[item.category] || 0) + item.deltaNetto;
+    }
+  });
+
+  const bar = document.getElementById('composition-bar');
+  const legend = document.getElementById('composition-legend');
+  bar.innerHTML = '';
+  legend.innerHTML = '';
+
+  if (totalNet <= 0) return;
+
+  Object.entries(grouped).forEach(([cat, val]) => {
+    const pct = (val / totalNet) * 100;
+    const seg = document.createElement('div');
+    seg.className = 'comp-seg';
+    seg.style.width = `${pct.toFixed(2)}%`;
+    seg.style.backgroundColor = colors[cat] || '#64748b';
+    seg.title = `${labels[cat] || cat}: ${fmtEur(val)} (${pct.toFixed(1)}%)`;
+    bar.appendChild(seg);
+
+    const leg = document.createElement('span');
+    leg.className = 'legend-item';
+    leg.innerHTML = `<span class="legend-dot" style="background:${colors[cat] || '#64748b'}"></span>${labels[cat] || cat}: <strong>${fmtEur(val)}</strong>`;
+    legend.appendChild(leg);
+  });
+}
+
+function renderItemizedTable(itemized, res) {
+  const tbody = document.getElementById('itemized-tbody');
+  const tfoot = document.getElementById('itemized-tfoot');
+  tbody.innerHTML = '';
+
+  itemized.forEach((item) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="item-title">${item.label}</div>
+        <div class="item-detail">${item.detail}</div>
+      </td>
+      <td class="num">${fmtEur(item.lordo)}</td>
+      <td class="num">${item.esente > 0 ? `<span class="pill pill-emerald">${fmtEur(item.esente)}</span>` : '—'}</td>
+      <td class="num">${fmtEur(item.trattenute)}</td>
+      <td class="num net-strong">${fmtEur(item.deltaNetto)}</td>
+      <td class="num">${fmtPct(item.percentualeNetta)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const resaTot =
+    res.totali.totaleCompetenze > 0
+      ? (res.totali.nettoEsatto / res.totali.totaleCompetenze) * 100
+      : 0;
+  tfoot.innerHTML = `
+    <tr>
+      <td>Totale Cedolino</td>
+      <td class="num">${fmtEur(res.totali.totaleCompetenze)}</td>
+      <td class="num">${fmtEur(res.competenze.trasfEsenteTot + Math.max(0, res.competenze.extraNetto))}</td>
+      <td class="num">${fmtEur(res.totali.totaleTrattenute)}</td>
+      <td class="num net-strong">${fmtEur(res.totali.nettoEsatto)}</td>
+      <td class="num">${fmtPct(resaTot)}</td>
+    </tr>
+  `;
+}
+
+function renderMarginalGrid(m) {
+  const grid = document.getElementById('marginal-grid');
+  const cards = [
+    { label: '+1h Viaggio (85%)', val: fmtEur(m.perOra.oreViaggio) },
+    { label: '+1h Straord. Feriale (+25%)', val: fmtEur(m.perOra.straordFeriale) },
+    { label: '+1h Straord. Festivo (+45%)', val: fmtEur(m.perOra.straordFestivo) },
+    { label: '+1h Straord. Sabato (+50%)', val: fmtEur(m.perOra.straordSabato) },
+    { label: '+1 gg Estero (≤ 77,47 €)', val: '100% esente' },
+    { label: '+1 gg Estero (90 €/gg)', val: fmtEur(m.trasferta.estero90) },
+  ];
+  grid.innerHTML = cards
+    .map(
+      (c) => `
+      <div class="marginal-pill">
+        <span>${c.label}</span>
+        <strong>${c.val}</strong>
+      </div>
+    `
+    )
+    .join('');
+}
+
+function renderFullPayslip(res) {
+  const container = document.getElementById('full-payslip-breakdown');
+  const compLines = [
+    ['Retribuzione ordinaria fissa', fmtEur(res.baseLordo)],
+    ['Indennità trasferte (totale)', fmtEur(res.competenze.trasfLordoTot)],
+    ['  di cui quota esente TUIR', fmtEur(res.competenze.trasfEsenteTot)],
+    ['  di cui quota imponibile', fmtEur(res.competenze.trasfImponibileTot)],
+    ['Ore viaggio (85%)', fmtEur(res.competenze.lordoViaggio)],
+    ['Straordinario feriale (+25%)', fmtEur(res.competenze.lordoStrFer)],
+    ['Straordinario festivo (+45%)', fmtEur(res.competenze.lordoStrFest)],
+    ['Straordinario sabato (+50%)', fmtEur(res.competenze.lordoStrSab)],
+  ];
+  if (res.competenze.extraNetto !== 0) {
+    compLines.push(['Voci nette extra / 730', fmtEur(res.competenze.extraNetto)]);
+  }
+
+  const ritLines = [
+    [`Imponibile previdenziale INPS`, fmtEur(res.imponibili.imponibilePrevidenziale)],
+    ['INPS IVS dipendente (9,19%)', fmtEur(res.contributi.inps)],
+    ['Contributo agg. IVS 1% (> 4.685 €)', fmtEur(res.contributi.ivs1)],
+    ['FSBA dipendente (0,15%)', fmtEur(res.contributi.fsba)],
+    ['EBAV quote dipendente', fmtEur(res.contributi.ebav)],
+    ['Imponibile fiscale', fmtEur(res.imponibili.imponibileFiscale)],
+    ['IRPEF scaglione 23%', fmtEur(res.irpef.scaglione1)],
+    ['IRPEF scaglione 33%', fmtEur(res.irpef.scaglione2)],
+    ['IRPEF scaglione 43%', fmtEur(res.irpef.scaglione3)],
+    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['Addizionale Regionale', fmtEur(res.addizionali.addReg)],
+    ['Addizionale Comunale', fmtEur(res.addizionali.addCom)],
+    ['Acconto Addizionale Comunale', fmtEur(res.addizionali.accCom)],
+  ];
+
+  const renderCol = (title, lines, totLabel, totVal) => `
+    <div class="breakdown-col">
+      <h3>${title}</h3>
+      ${lines
+        .map(
+          ([k, v]) =>
+            `<div class="breakdown-line"><span>${k}</span><span>${v}</span></div>`
+        )
+        .join('')}
+      <div class="breakdown-line total"><span>${totLabel}</span><span>${totVal}</span></div>
+    </div>
+  `;
+
+  container.innerHTML =
+    renderCol('Competenze', compLines, 'Totale Competenze', fmtEur(res.totali.totaleCompetenze)) +
+    renderCol('Imponibili & Trattenute', ritLines, 'Totale Trattenute', fmtEur(res.totali.totaleTrattenute));
+}
+
+// ── BANNER & ONBOARDING INIZIALE ──
+function initExampleBanner() {
+  const banner = document.getElementById('example-banner');
+  if (!banner) return;
+  const isEmpty = getProfileRates(profile).baseLordo === 0;
+  const dismissed = Boolean(localStorage.getItem(STORAGE_BANNER_DISMISSED_KEY));
+  banner.style.display = isEmpty && !dismissed ? 'flex' : 'none';
+
+  document.getElementById('btn-go-settings').addEventListener('click', () => {
+    document.querySelector('.tab-btn[data-tab="settings"]').click();
+  });
+  document.getElementById('btn-dismiss-banner').addEventListener('click', () => {
+    localStorage.setItem(STORAGE_BANNER_DISMISSED_KEY, '1');
+    banner.style.display = 'none';
+  });
+}
+
+function initInitialRouteAndOnboarding() {
+  const card = document.getElementById('onboarding-card');
+  const isEmpty = getProfileRates(profile).baseLordo === 0;
+  const onboarded = Boolean(localStorage.getItem(STORAGE_ONBOARDED_KEY));
+
+  if (isEmpty && !onboarded) {
+    if (card) card.style.display = 'block';
+    document.querySelector('.tab-btn[data-tab="settings"]')?.click();
+  } else if (card) {
+    card.style.display = 'none';
+  }
+
+  document.getElementById('btn-finish-onboarding')?.addEventListener('click', () => {
+    localStorage.setItem(STORAGE_ONBOARDED_KEY, '1');
+    if (card) card.style.display = 'none';
+    document.querySelector('.tab-btn[data-tab="sim"]')?.click();
+  });
+
+  document.getElementById('btn-dismiss-onboarding')?.addEventListener('click', () => {
+    localStorage.setItem(STORAGE_ONBOARDED_KEY, '1');
+    if (card) card.style.display = 'none';
+  });
+}
+
+function showConfigStatus(msg, isError = false) {
+  const el = document.getElementById('config-status-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--rose)' : 'var(--emerald)';
+  el.style.display = 'block';
+  setTimeout(() => {
+    el.style.display = 'none';
+  }, 4500);
+}
+
+// ── TAB 2: NAZIONI & PROFILO ──
+function initSettingsTab() {
+  document.getElementById('btn-export-config').addEventListener('click', () => {
+    const payload = JSON.stringify({ profile, countries }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'config_simulatore_cedolino.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showConfigStatus('Configurazione esportata in config_simulatore_cedolino.json');
+  });
+
+  const importInp = document.getElementById('inp-import-config');
+  importInp.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== 'object') throw new Error('Formato non valido');
+      if (parsed.profile && typeof parsed.profile === 'object') {
+        profile = { ...DEFAULT_PROFILE, ...parsed.profile };
+        saveProfile();
+      }
+      if (Array.isArray(parsed.countries) && parsed.countries.length > 0) {
+        countries = parsed.countries;
+        saveCountries();
+      }
+      renderCountriesList();
+      renderProfileForm();
+      syncCalibrationFromProfile();
+      renderTrips();
+      updateSimulation();
+      const banner = document.getElementById('example-banner');
+      if (banner) banner.style.display = 'none';
+      showConfigStatus(`Configurazione importata da ${file.name}`);
+    } catch {
+      showConfigStatus('Errore: file JSON non valido.', true);
+    } finally {
+      importInp.value = '';
+    }
+  });
+  const formCountry = document.getElementById('form-add-country');
+  formCountry.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nameEl = document.getElementById('new-country-name');
+    const diariaEl = document.getElementById('new-country-diaria');
+    const tipoEl = document.getElementById('new-country-tipo');
+    const name = nameEl.value.trim();
+    const diaria = Number(diariaEl.value);
+    if (!name || Number.isNaN(diaria) || diaria < 0) return;
+
+    countries.push({
+      id: `c-${Date.now()}`,
+      name,
+      diaria: round2(diaria),
+      tipo: tipoEl.value,
+      regime: 'full',
+    });
+    saveCountries();
+    nameEl.value = '';
+    diariaEl.value = '';
+    renderCountriesList();
+    renderTrips();
+  });
+
+  document.getElementById('btn-reset-profile').addEventListener('click', () => {
+    profile = { ...DEFAULT_PROFILE };
+    countries = [];
+    saveProfile();
+    saveCountries();
+    renderCountriesList();
+    renderProfileForm();
+    syncCalibrationFromProfile();
+    renderTrips();
+    updateSimulation();
+    initExampleBanner();
+    showConfigStatus('Tutti i dati sono stati azzerati.');
+  });
+
+  renderCountriesList();
+  renderProfileForm();
+}
+
+function renderCountriesList() {
+  const list = document.getElementById('countries-list');
+  const empty = document.getElementById('countries-empty');
+  list.innerHTML = '';
+  if (empty) empty.style.display = countries.length === 0 ? 'block' : 'none';
+  countries.forEach((c) => {
+    const item = document.createElement('div');
+    item.className = 'country-item';
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.className = 'input-field';
+    nameInp.value = c.name;
+    nameInp.addEventListener('input', () => {
+      c.name = nameInp.value;
+      saveCountries();
+      renderTrips();
+    });
+
+    const diariaInp = document.createElement('input');
+    diariaInp.type = 'number';
+    diariaInp.step = '0.01';
+    diariaInp.min = '0';
+    diariaInp.className = 'input-field';
+    diariaInp.value = String(c.diaria);
+    diariaInp.addEventListener('input', () => {
+      c.diaria = Math.max(0, Number(diariaInp.value) || 0);
+      saveCountries();
+      renderTrips();
+    });
+
+    const tipoSel = document.createElement('select');
+    tipoSel.className = 'input-select';
+    tipoSel.innerHTML = `
+      <option value="estero">Estero (77,47 €)</option>
+      <option value="italia">Italia (46,48 €)</option>
+    `;
+    tipoSel.value = c.tipo;
+    tipoSel.addEventListener('change', () => {
+      c.tipo = tipoSel.value;
+      saveCountries();
+      renderTrips();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn btn-danger-ghost';
+    delBtn.textContent = '×';
+    delBtn.title = 'Elimina nazione';
+    delBtn.addEventListener('click', () => {
+      countries = countries.filter((x) => x.id !== c.id);
+      saveCountries();
+      renderCountriesList();
+      renderTrips();
+    });
+
+    item.append(nameInp, diariaInp, tipoSel, delBtn);
+    list.appendChild(item);
+  });
+}
+
+function renderProfileForm() {
+  const form = document.getElementById('form-profile');
+  const fields = [
+    ['pagaBase', 'Paga Base (€)'],
+    ['scatti', 'Scatti Anzianità (€)'],
+    ['superminimo', 'Superminimo Assorbibile (€)'],
+    ['erv', 'E.R.V. (€)'],
+    ['divisoreOrario', 'Divisore Orario'],
+    ['addRegionale', 'Addizionale Regionale (€/mese)'],
+    ['addComunaleSaldo', 'Addizionale Comunale (€/mese)'],
+    ['addComunaleAcconto', 'Acconto Comunale (€/mese)'],
+    ['ebavFisso', 'EBAV Dipendente (€/mese)'],
+    ['redditoAnnuoStimato', 'Reddito annuo stimato (€, 0 = auto 13×base)'],
+  ];
+
+  form.innerHTML = '';
+  fields.forEach(([key, label]) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.innerHTML = `<label>${label}</label>`;
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.step = '0.01';
+    inp.className = 'input-field';
+    inp.value = String(profile[key]);
+    inp.addEventListener('input', () => {
+      profile[key] = Number(inp.value) || 0;
+      saveProfile();
+      updateSimulation();
+    });
+    wrap.appendChild(inp);
+    form.appendChild(wrap);
+  });
+}
+
+// ── CARICAMENTO OPZIONALE CONFIG LOCALE (solo su HTTP, mai su file://) ──
+async function tryLoadLocalConfig() {
+  if (location.protocol === 'file:') return;
+  if (localStorage.getItem(STORAGE_PROFILE_KEY)) return;
+  try {
+    const resp = await fetch('./config.local.json', { cache: 'no-store' });
+    if (!resp.ok) return;
+    const parsed = await resp.json();
+    if (parsed.profile) {
+      profile = { ...DEFAULT_PROFILE, ...parsed.profile };
+      saveProfile();
+    }
+    if (Array.isArray(parsed.countries) && parsed.countries.length > 0) {
+      countries = parsed.countries;
+      saveCountries();
+    }
+    renderCountriesList();
+    renderProfileForm();
+    syncCalibrationFromProfile();
+    renderTrips();
+    updateSimulation();
+    const banner = document.getElementById('example-banner');
+    if (banner) banner.style.display = 'none';
+    const card = document.getElementById('onboarding-card');
+    if (card) card.style.display = 'none';
+    document.querySelector('.tab-btn[data-tab="sim"]')?.click();
+  } catch {}
+}
+
+// ── STAMPA PDF & ESPORTAZIONE JPG ──
+function initExportButtons() {
+  const printBtn = document.getElementById('btn-print-payslip');
+  const jpgBtn = document.getElementById('btn-save-jpg');
+  if (!printBtn || !jpgBtn) return;
+
+  printBtn.addEventListener('click', () => {
+    const printHeader = document.getElementById('print-header');
+    const monthName = MONTHS_IT[simState.mese - 1] || '';
+    const today = new Date().toLocaleDateString('it-IT');
+    if (printHeader) {
+      printHeader.textContent = `Simulazione Cedolino · ${monthName} ${new Date().getFullYear()} — Calcolo teorico generato il ${today}`;
+    }
+    const details = document.querySelector('.details-payslip');
+    const wasOpen = details ? details.open : false;
+    if (details) details.open = true;
+
+    const cleanup = () => {
+      if (details && !wasOpen) details.open = false;
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  });
+
+  jpgBtn.addEventListener('click', () => {
+    exportPayslipAsJpg();
+  });
+}
+
+function exportPayslipAsJpg() {
+  const res = calculatePayslip(simState, profile);
+  const itemized = calculateItemizedNet(simState, profile);
+  const monthName = MONTHS_IT[simState.mese - 1] || 'Mese';
+  const year = new Date().getFullYear();
+  const today = new Date().toLocaleDateString('it-IT');
+
+  const width = 1000;
+  const scale = 2;
+  const rowH = 38;
+  const headerH = 210;
+  const tableHeaderH = 68;
+  const tableRowsH = (itemized.length + 1) * rowH;
+  const summaryH = 250;
+  const footerH = 54;
+  const height = headerH + tableHeaderH + tableRowsH + summaryH + footerH;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // Sfondo bianco
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  // Testata scura
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, width, headerH);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '600 13px system-ui, -apple-system, sans-serif';
+  ctx.fillText(`SIMULAZIONE CEDOLINO · ${monthName.toUpperCase()} ${year}`, 40, 42);
+
+  ctx.textAlign = 'right';
+  ctx.fillText(`Generato il ${today}`, width - 40, 42);
+  ctx.textAlign = 'left';
+
+  ctx.fillStyle = '#34d399';
+  ctx.font = '800 44px system-ui, -apple-system, sans-serif';
+  ctx.fillText(fmtEurInt(res.totali.nettoArrotondato), 40, 98);
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '500 15px system-ui, -apple-system, sans-serif';
+  ctx.fillText(`Netto esatto: ${fmtEur(res.totali.nettoEsatto)}`, 40, 126);
+
+  // Strip KPI in testata
+  const resaPct =
+    res.totali.totaleCompetenze > 0
+      ? (res.totali.nettoEsatto / res.totali.totaleCompetenze) * 100
+      : 0;
+  const kpis = [
+    ['COMPETENZE LORDE', fmtEur(res.totali.totaleCompetenze), '#f8fafc'],
+    ['QUOTA ESENTE', fmtEur(res.competenze.trasfEsenteTot + Math.max(0, res.competenze.extraNetto)), '#34d399'],
+    ['TRATTENUTE TOTALI', fmtEur(res.totali.totaleTrattenute), '#fb7185'],
+    ['RESA NETTA', fmtPct(resaPct), '#f8fafc'],
+  ];
+  kpis.forEach(([lbl, val, col], idx) => {
+    const x = 40 + idx * 235;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+    ctx.fillText(lbl, x, 166);
+    ctx.fillStyle = col;
+    ctx.font = '700 17px system-ui, -apple-system, sans-serif';
+    ctx.fillText(val, x, 190);
+  });
+
+  // Sezione 1: Tabella netto per singola voce
+  let y = headerH + 34;
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '700 17px system-ui, -apple-system, sans-serif';
+  ctx.fillText('Netto di ogni singola voce', 40, y);
+
+  y += 24;
+  const cols = [40, 500, 620, 745, 875, 960];
+  ctx.fillStyle = '#64748b';
+  ctx.font = '700 11px system-ui, -apple-system, sans-serif';
+  ctx.fillText('VOCE', cols[0], y);
+  ctx.textAlign = 'right';
+  ctx.fillText('LORDO', cols[1], y);
+  ctx.fillText('ESENTE', cols[2], y);
+  ctx.fillText('TRATT.', cols[3], y);
+  ctx.fillText('NETTO €', cols[4], y);
+  ctx.fillText('% NETTA', cols[5], y);
+  ctx.textAlign = 'left';
+
+  y += 10;
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, y);
+  ctx.lineTo(width - 40, y);
+  ctx.stroke();
+
+  itemized.forEach((item) => {
+    y += rowH;
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '600 13px system-ui, -apple-system, sans-serif';
+    const title = item.detail ? `${item.label} (${item.detail})` : item.label;
+    ctx.fillText(title.slice(0, 52), cols[0], y - 12);
+
+    ctx.textAlign = 'right';
+    ctx.font = '500 13px system-ui, -apple-system, sans-serif';
+    ctx.fillText(fmtEur(item.lordo), cols[1], y - 12);
+    ctx.fillStyle = item.esente > 0 ? '#059669' : '#64748b';
+    ctx.fillText(item.esente > 0 ? fmtEur(item.esente) : '—', cols[2], y - 12);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(fmtEur(item.trattenute), cols[3], y - 12);
+    ctx.fillStyle = '#059669';
+    ctx.font = '700 13px system-ui, -apple-system, sans-serif';
+    ctx.fillText(fmtEur(item.deltaNetto), cols[4], y - 12);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '500 13px system-ui, -apple-system, sans-serif';
+    ctx.fillText(fmtPct(item.percentualeNetta), cols[5], y - 12);
+    ctx.textAlign = 'left';
+
+    ctx.strokeStyle = '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(40, y);
+    ctx.lineTo(width - 40, y);
+    ctx.stroke();
+  });
+
+  // Riga Totale
+  y += rowH;
+  ctx.strokeStyle = '#94a3b8';
+  ctx.beginPath();
+  ctx.moveTo(40, y - rowH + 2);
+  ctx.lineTo(width - 40, y - rowH + 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '700 14px system-ui, -apple-system, sans-serif';
+  ctx.fillText('Totale Cedolino', cols[0], y - 12);
+  ctx.textAlign = 'right';
+  ctx.fillText(fmtEur(res.totali.totaleCompetenze), cols[1], y - 12);
+  ctx.fillText(fmtEur(res.competenze.trasfEsenteTot + Math.max(0, res.competenze.extraNetto)), cols[2], y - 12);
+  ctx.fillText(fmtEur(res.totali.totaleTrattenute), cols[3], y - 12);
+  ctx.fillStyle = '#059669';
+  ctx.fillText(fmtEur(res.totali.nettoEsatto), cols[4], y - 12);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillText(fmtPct(resaPct), cols[5], y - 12);
+  ctx.textAlign = 'left';
+
+  // Sezione 2: Riepilogo Imponibili e Trattenute
+  y += 34;
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(40, y, width - 80, 195);
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.strokeRect(40, y, width - 80, 195);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '700 14px system-ui, -apple-system, sans-serif';
+  ctx.fillText('Riepilogo Imponibili e Trattenute', 60, y + 28);
+
+  const leftSummary = [
+    ['Imponibile Previdenziale INPS', fmtEur(res.imponibili.imponibilePrevidenziale)],
+    ['INPS IVS (9,19%)', fmtEur(res.contributi.inps)],
+    ['Contributo agg. IVS 1% (> 4.685 €)', fmtEur(res.contributi.ivs1)],
+    ['FSBA (0,15%) + EBAV', fmtEur(round2(res.contributi.fsba + res.contributi.ebav))],
+    ['Imponibile Fiscale', fmtEur(res.imponibili.imponibileFiscale)],
+  ];
+  const rightSummary = [
+    ['IRPEF Lorda (23% / 33% / 43%)', fmtEur(res.irpef.irpefLorda)],
+    ['Detrazioni lav. dipendente', res.irpef.detrazioni > 0 ? `-${fmtEur(res.irpef.detrazioni)}` : fmtEur(0)],
+    ['IRPEF Netta', fmtEur(res.irpef.irpefNetta)],
+    ['Addizionali Locali (Reg. + Com.)', fmtEur(res.addizionali.totaleAddizionali)],
+    ['Totale Trattenute', fmtEur(res.totali.totaleTrattenute)],
+  ];
+
+  const drawCol = (items, startX, colW) => {
+    items.forEach(([k, v], i) => {
+      const ly = y + 58 + i * 28;
+      ctx.fillStyle = '#475569';
+      ctx.font = '500 13px system-ui, -apple-system, sans-serif';
+      ctx.fillText(k, startX, ly);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '600 13px system-ui, -apple-system, sans-serif';
+      ctx.fillText(v, startX + colW, ly);
+      ctx.textAlign = 'left';
+    });
+  };
+  drawCol(leftSummary, 60, 405);
+  drawCol(rightSummary, 535, 405);
+
+  // Footer
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '500 12px system-ui, -apple-system, sans-serif';
+  ctx.fillText('Calcolo teorico generato con Simulatore Cedolino · CCNL Metalmeccanico Artigianato', 40, height - 20);
+
+  const link = document.createElement('a');
+  link.download = `Cedolino_Teorico_${monthName}_${year}.jpg`;
+  link.href = canvas.toDataURL('image/jpeg', 0.94);
+  link.click();
+}
+
+// ── CALIBRAZIONE RAPIDA DA BUSTA PAGA (100% OFFLINE) ──
+function getCalibrationTempProfile() {
+  const num = (id) => Math.max(0, Number(document.getElementById(id)?.value) || 0);
+  return {
+    ...profile,
+    pagaBase: num('cal-paga-base'),
+    scatti: num('cal-scatti'),
+    superminimo: num('cal-superminimo'),
+    erv: num('cal-erv'),
+    addRegionale: num('cal-add-reg'),
+    addComunaleSaldo: num('cal-add-com'),
+    addComunaleAcconto: num('cal-acc-com'),
+    ebavFisso: num('cal-ebav'),
+    redditoAnnuoStimato: num('cal-reddito-annuo'),
+  };
+}
+
+function syncCalibrationFromProfile() {
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(v ?? 0);
+  };
+  setVal('cal-paga-base', profile.pagaBase);
+  setVal('cal-scatti', profile.scatti);
+  setVal('cal-superminimo', profile.superminimo);
+  setVal('cal-erv', profile.erv);
+  const tot = round2(
+    Number(profile.pagaBase) +
+      Number(profile.scatti) +
+      Number(profile.superminimo) +
+      Number(profile.erv)
+  );
+  setVal('cal-retrib-tot', tot);
+  setVal('cal-add-reg', profile.addRegionale);
+  setVal('cal-add-com', profile.addComunaleSaldo);
+  setVal('cal-acc-com', profile.addComunaleAcconto);
+  setVal('cal-ebav', profile.ebavFisso);
+  setVal('cal-reddito-annuo', profile.redditoAnnuoStimato);
+  updateCalibrationPreview();
+}
+
+function updateCalibrationPreview() {
+  const box = document.getElementById('cal-check-result');
+  if (!box) return;
+  const tempProfile = getCalibrationTempProfile();
+  const mese = Number(document.getElementById('cal-mese')?.value) || 4;
+  const calc = calculatePayslip({ mese }, tempProfile);
+  const nettoRealeRaw = document.getElementById('cal-netto-reale')?.value;
+  const nettoReale = nettoRealeRaw !== '' && nettoRealeRaw !== undefined ? Number(nettoRealeRaw) : null;
+
+  if (calc.baseLordo <= 0) {
+    box.innerHTML = `<span class="pill pill-muted">Inserisci la retribuzione per vedere il netto calcolato</span>`;
+    return;
+  }
+
+  let html = `<div>Netto base calcolato: <strong>${fmtEurInt(calc.totali.nettoArrotondato)}</strong> <span class="card-sub">(esatto ${fmtEur(calc.totali.nettoEsatto)})</span></div>`;
+  if (nettoReale !== null && !Number.isNaN(nettoReale) && nettoReale > 0) {
+    const diff = round2(calc.totali.nettoArrotondato - nettoReale);
+    if (Math.abs(diff) <= 5) {
+      html += `<span class="pill pill-emerald">✓ Profilo calibrato! (scarto ${fmtEur(diff)})</span>`;
+    } else {
+      html += `<span class="pill pill-amber">Scarto di ${fmtEur(diff)}: verifica addizionali, EBAV o se nel mese c'erano straordinari/trasferte</span>`;
+    }
+  }
+  box.innerHTML = html;
+}
+
+function initCalibrationWizard() {
+  const meseSel = document.getElementById('cal-mese');
+  if (meseSel) {
+    MONTHS_IT.forEach((name, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx + 1);
+      opt.textContent = name;
+      meseSel.appendChild(opt);
+    });
+    meseSel.value = '4';
+    meseSel.addEventListener('change', updateCalibrationPreview);
+  }
+
+  const partIds = ['cal-paga-base', 'cal-scatti', 'cal-superminimo', 'cal-erv'];
+  partIds.forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      const sum = round2(
+        partIds.reduce((acc, pid) => acc + Math.max(0, Number(document.getElementById(pid)?.value) || 0), 0)
+      );
+      const totEl = document.getElementById('cal-retrib-tot');
+      if (totEl) totEl.value = String(sum);
+      updateCalibrationPreview();
+    });
+  });
+
+  document.getElementById('cal-retrib-tot')?.addEventListener('input', (e) => {
+    const tot = Math.max(0, Number(e.target.value) || 0);
+    document.getElementById('cal-paga-base').value = String(tot);
+    document.getElementById('cal-scatti').value = '0';
+    document.getElementById('cal-superminimo').value = '0';
+    document.getElementById('cal-erv').value = '0';
+    updateCalibrationPreview();
+  });
+
+  ['cal-add-reg', 'cal-add-com', 'cal-acc-com', 'cal-ebav', 'cal-reddito-annuo', 'cal-netto-reale'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', updateCalibrationPreview);
+  });
+
+  document.getElementById('btn-ebav-std')?.addEventListener('click', () => {
+    const ebavEl = document.getElementById('cal-ebav');
+    if (ebavEl) ebavEl.value = '3.85';
+    updateCalibrationPreview();
+  });
+
+  document.getElementById('btn-apply-calibration')?.addEventListener('click', () => {
+    profile = getCalibrationTempProfile();
+    saveProfile();
+    localStorage.setItem(STORAGE_ONBOARDED_KEY, '1');
+    renderProfileForm();
+    updateSimulation();
+    initExampleBanner();
+    const card = document.getElementById('onboarding-card');
+    if (card) card.style.display = 'none';
+    showConfigStatus('Parametri retributivi applicati e salvati.');
+    document.querySelector('.tab-btn[data-tab="sim"]')?.click();
+  });
+
+  syncCalibrationFromProfile();
+}
+
+// ── BOOTSTRAP ──
+initTabs();
+initSimControls();
+renderTrips();
+initSettingsTab();
+initCalibrationWizard();
+initExampleBanner();
+initInitialRouteAndOnboarding();
+initExportButtons();
+updateSimulation();
+tryLoadLocalConfig();
+
+})();
+  </script>
+</body>
+</html>

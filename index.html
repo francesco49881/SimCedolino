@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulatore Cedolino &amp; Trasferte</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">€</div>
+          <div>
+            <h1>Simulatore Cedolino</h1>
+            <p id="header-profile-summary" class="brand-sub">Caricamento profilo…</p>
+          </div>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sezioni applicazione">
+          <button class="tab-btn active" data-tab="sim" role="tab" aria-selected="true">Simulatore</button>
+          <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Nazioni &amp; Profilo</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <!-- TAB 1: SIMULATORE -->
+      <section id="tab-sim" class="tab-panel active">
+        <div id="example-banner" class="info-banner" style="display: none;">
+          <div>
+            <strong>Nessuna retribuzione base configurata:</strong> vai su
+            <button id="btn-go-settings" type="button" class="link-btn">Nazioni &amp; Profilo</button>
+            per inserire i dati della tua busta paga (oppure importa il tuo file <code>.json</code>).
+          </div>
+          <button id="btn-dismiss-banner" type="button" class="btn btn-danger-ghost" title="Chiudi avviso">×</button>
+        </div>
+        <div class="sim-grid">
+          <!-- COLONNA INPUT -->
+          <div class="col-inputs">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Mese di riferimento</h2>
+                  <p class="card-sub">Regola automaticamente le rate di addizionali locali</p>
+                </div>
+                <button id="btn-reset-sim" class="btn btn-ghost btn-sm" type="button" title="Azzera tutte le variabili">Azzera</button>
+              </div>
+              <div class="month-row">
+                <select id="sim-month" class="input-select" aria-label="Mese di riferimento"></select>
+                <span id="sim-month-tax-note" class="pill pill-muted">Addizionali attive</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Trasferte</h2>
+                  <p class="card-sub">Aggiungi una o più trasferte nel mese (es. 14 gg in Grecia)</p>
+                </div>
+                <button id="btn-add-trip" class="btn btn-primary btn-sm" type="button">+ Aggiungi trasferta</button>
+              </div>
+              <div id="trips-container" class="trips-list"></div>
+              <div id="trips-empty" class="empty-state">
+                Nessuna trasferta inserita. Clicca <strong>+ Aggiungi trasferta</strong> per simulare una trasferta.
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Ore Viaggio &amp; Straordinari</h2>
+                  <p class="card-sub">Inserisci le ore previste nel mese</p>
+                </div>
+              </div>
+              <div class="hours-grid">
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-viaggio">Ore viaggio <span class="badge-rate">85%</span></label>
+                    <span id="rate-viaggio" class="hour-rate">16,54 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-viaggio" data-delta="-1">−</button>
+                    <input id="inp-viaggio" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-viaggio" data-delta="1">+</button>
+                  </div>
+                </div>
+
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-str-fer">Straord. feriale <span class="badge-rate">+25%</span></label>
+                    <span id="rate-str-fer" class="hour-rate">24,32 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-str-fer" data-delta="-1">−</button>
+                    <input id="inp-str-fer" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-str-fer" data-delta="1">+</button>
+                  </div>
+                </div>
+
+                <div class="hour-item">
+                  <div class="hour-meta">
+                    <label for="inp-str-fest">Straord. festivo <span class="badge-rate">+45%</span></label>
+                    <span id="rate-str-fest" class="hour-rate">28,21 €/h</span>
+                  </div>
+                  <div class="stepper">
+                    <button type="button" class="step-btn" data-target="inp-str-fest" data-delta="-1">−</button>
+                    <input id="inp-str-fest" type="number" min="0" step="0.5" value="0" />
+                    <button type="button" class="step-btn" data-target="inp-str-fest" data-delta="1">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="saturday-box">
+                <div class="saturday-head">
+                  <div>
+                    <span class="saturday-title">Lavoro di Sabato</span>
+                    <span class="saturday-rule">CCNL Artigiani: prime 3h/sabato al +25%, dalla 4ª al +50%</span>
+                  </div>
+                  <span id="rate-str-sab" class="hour-rate">29,18 €/h (+50%)</span>
+                </div>
+                <div class="saturday-inputs">
+                  <div class="field-group">
+                    <label for="inp-sab-ore">Ore totali sabato</label>
+                    <div class="stepper">
+                      <button type="button" class="step-btn" data-target="inp-sab-ore" data-delta="-1">−</button>
+                      <input id="inp-sab-ore" type="number" min="0" step="0.5" value="0" />
+                      <button type="button" class="step-btn" data-target="inp-sab-ore" data-delta="1">+</button>
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <label for="inp-sab-num">N° sabati lavorati</label>
+                    <div class="stepper">
+                      <button type="button" class="step-btn" data-target="inp-sab-num" data-delta="-1">−</button>
+                      <input id="inp-sab-num" type="number" min="1" step="1" value="1" />
+                      <button type="button" class="step-btn" data-target="inp-sab-num" data-delta="1">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="saturday-footer">
+                  <span id="sabato-split-badge" class="pill pill-muted">0 h · inserisci le ore del sabato</span>
+                </div>
+              </div>
+
+              <details class="extra-details">
+                <summary>Voci nette extra / Rimborso 730 (opzionale)</summary>
+                <div class="extra-row">
+                  <label for="inp-extra-netto">Importo netto aggiuntivo (€)</label>
+                  <input id="inp-extra-netto" class="input-field" type="number" step="1" value="0" />
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <!-- COLONNA RISULTATI -->
+          <div class="col-results">
+            <div id="print-header" class="print-only"></div>
+            <!-- HERO CARD -->
+            <div class="card hero-card">
+              <div class="hero-top">
+                <div>
+                  <span class="hero-label">Netto Stimato in Busta</span>
+                  <div class="hero-amount-row">
+                    <span id="res-netto-arrot" class="hero-amount">€ 2.159</span>
+                    <span id="res-netto-esatto" class="hero-exact">(esatto € 2.158,45)</span>
+                  </div>
+                </div>
+                <div class="hero-right-actions">
+                  <div class="hero-delta-box">
+                    <span id="res-delta-base" class="delta-pill">+€ 0,00 vs mese base</span>
+                  </div>
+                  <div class="hero-actions">
+                    <button id="btn-print-payslip" class="btn btn-hero" type="button" title="Stampa o salva come PDF">Stampa / PDF</button>
+                    <button id="btn-save-jpg" class="btn btn-hero" type="button" title="Scarica immagine JPG riepilogativa">Salva JPG</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi-strip">
+                <div class="kpi">
+                  <span class="kpi-label">Competenze Lorde</span>
+                  <strong id="res-lordo-tot">€ 3.365,78</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Quota Esente</span>
+                  <strong id="res-esente-tot" class="text-emerald">€ 0,00</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Trattenute Totali</span>
+                  <strong id="res-trattenute-tot" class="text-rose">€ 1.207,33</strong>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Resa Netta Globale</span>
+                  <strong id="res-resa-pct">64,1%</strong>
+                </div>
+              </div>
+
+              <div class="composition-wrap">
+                <div id="composition-bar" class="composition-bar" aria-label="Composizione del netto"></div>
+                <div id="composition-legend" class="composition-legend"></div>
+              </div>
+            </div>
+
+            <!-- SOGLIE FISCALI -->
+            <div class="card thresholds-card">
+              <div class="threshold-item">
+                <div class="threshold-head">
+                  <span>Scaglione IRPEF corrente</span>
+                  <strong id="thr-irpef-badge" class="pill pill-blue">33%</strong>
+                </div>
+                <p id="thr-irpef-desc" class="threshold-desc"></p>
+              </div>
+              <div class="threshold-item">
+                <div class="threshold-head">
+                  <span>Contributo aggiuntivo IVS 1% (&gt; 4.685 €)</span>
+                  <strong id="thr-ivs-badge" class="pill pill-muted">Non attivo</strong>
+                </div>
+                <p id="thr-ivs-desc" class="threshold-desc"></p>
+              </div>
+            </div>
+
+            <!-- NETTO PER SINGOLA VOCE -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Netto di ogni singola voce</h2>
+                  <p class="card-sub">Quanto entra realmente in tasca per ciascuna voce inserita</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Voce</th>
+                      <th class="num">Lordo</th>
+                      <th class="num">Esente</th>
+                      <th class="num">Trattenute</th>
+                      <th class="num">Netto €</th>
+                      <th class="num">% Netta</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemized-tbody"></tbody>
+                  <tfoot id="itemized-tfoot"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- VALORE MARGINALE LIVE -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Quanto vale adesso +1 ora / +1 giorno</h2>
+                  <p class="card-sub">Guadagno netto reale al tuo scaglione fiscale attuale</p>
+                </div>
+              </div>
+              <div id="marginal-grid" class="marginal-grid"></div>
+            </div>
+
+            <!-- CEDOLINO COMPLETO ESPANDIBILE -->
+            <details class="card details-payslip">
+              <summary class="details-summary">
+                <span>Dettaglio Cedolino Completo</span>
+                <span class="details-hint">Clicca per espandere</span>
+              </summary>
+              <div id="full-payslip-breakdown" class="payslip-breakdown"></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: NAZIONI & PROFILO -->
+      <section id="tab-settings" class="tab-panel">
+        <div id="onboarding-card" class="card onboarding-card" style="display: none;">
+          <div class="onboarding-head">
+            <div>
+              <h2>Benvenuto nel Simulatore Cedolino</h2>
+              <p class="card-sub">Stima in anticipo il tuo netto mensile con trasferte, ore viaggio e straordinari (regola sabato CCNL Artigiani inclusa). Tutti i dati restano privati nel tuo browser.</p>
+            </div>
+            <button id="btn-dismiss-onboarding" type="button" class="btn btn-danger-ghost" title="Chiudi guida">×</button>
+          </div>
+          <div class="onboarding-steps">
+            <div class="onboarding-step">
+              <span class="step-num">1</span>
+              <div>
+                <strong>Configura la tua paga</strong>
+                <p>Inserisci Paga base, Scatti, Superminimo, E.R.V. e Addizionali dalla tua busta paga (o importa un <code>.json</code>).</p>
+              </div>
+            </div>
+            <div class="onboarding-step">
+              <span class="step-num">2</span>
+              <div>
+                <strong>Aggiungi le tue diarie</strong>
+                <p>Salva le nazioni in cui vai spesso in trasferta (puoi aggiungerle o modificarle anche in seguito).</p>
+              </div>
+            </div>
+            <div class="onboarding-step">
+              <span class="step-num">3</span>
+              <div>
+                <strong>Simula e salva il mese</strong>
+                <p>Inserisci trasferte e ore nel Simulatore, scopri il netto di ogni voce e salva il riepilogo in JPG o PDF.</p>
+              </div>
+            </div>
+          </div>
+          <div class="onboarding-footer">
+            <button id="btn-finish-onboarding" type="button" class="btn btn-primary">Inizia a simulare →</button>
+          </div>
+        </div>
+
+        <div id="calibration-card" class="card calibration-card">
+          <div class="card-header">
+            <div>
+              <h2>Calibrazione Rapida da Busta Paga (100% offline)</h2>
+              <p class="card-sub">Copia i numeri dai riquadri della tua ultima busta paga (meglio se un mese senza trasferte né straordinari) per tarare e verificare il simulatore.</p>
+            </div>
+          </div>
+
+          <div class="payslip-map">
+            <div class="cal-section">
+              <div class="cal-section-title">1 · Testata in alto (Retribuzione fissa mensile)</div>
+              <div class="cal-grid-4">
+                <div class="field-group">
+                  <label for="cal-paga-base">Paga Base (€)</label>
+                  <input id="cal-paga-base" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-scatti">Scatti (€)</label>
+                  <input id="cal-scatti" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-superminimo">Superm. Assor. (€)</label>
+                  <input id="cal-superminimo" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-erv">E.R.V. (€)</label>
+                  <input id="cal-erv" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+              </div>
+              <div class="cal-total-row">
+                <label for="cal-retrib-tot"><strong>= Retribuzione Totale (€)</strong> <span class="card-sub">(puoi anche inserire solo questo valore)</span></label>
+                <input id="cal-retrib-tot" class="input-field cal-total-input" type="number" min="0" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <div class="cal-section">
+              <div class="cal-section-title">2 · Corpo del cedolino (Trattenute locali e reddito)</div>
+              <div class="cal-grid-3">
+                <div class="field-group">
+                  <label for="cal-add-reg"><span class="cal-code">2.5994</span> Addiz. Regionale (€)</label>
+                  <input id="cal-add-reg" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-add-com"><span class="cal-code">2.5995</span> Addiz. Comunale (€)</label>
+                  <input id="cal-add-com" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-acc-com"><span class="cal-code">2.5998</span> Acconto Comunale (€)</label>
+                  <input id="cal-acc-com" class="input-field" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field-group">
+                  <label for="cal-ebav"><span class="cal-code">2.0165-67</span> EBAV dip. (€)</label>
+                  <div class="cal-inline-btn">
+                    <input id="cal-ebav" class="input-field" type="number" min="0" step="0.01" value="0" />
+                    <button id="btn-ebav-std" type="button" class="btn btn-ghost btn-sm" title="Imposta quota standard 3,85 €">3,85 €</button>
+                  </div>
+                </div>
+                <div class="field-group">
+                  <label for="cal-reddito-annuo"><span class="cal-code">2.6082</span> Reddito teorico annuo (€)</label>
+                  <input id="cal-reddito-annuo" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = auto" />
+                </div>
+              </div>
+            </div>
+
+            <div class="cal-section cal-verify-box">
+              <div class="cal-section-title">3 · Verifica immediata con la tua busta paga (opzionale)</div>
+              <div class="cal-verify-grid">
+                <div class="field-group">
+                  <label for="cal-mese">Mese della busta paga</label>
+                  <select id="cal-mese" class="input-select"></select>
+                </div>
+                <div class="field-group">
+                  <label for="cal-netto-reale">Netto reale sulla busta paga (€)</label>
+                  <input id="cal-netto-reale" class="input-field" type="number" min="0" step="0.01" placeholder="Es. 2159" />
+                </div>
+                <div id="cal-check-result" class="cal-check-result">
+                  <span class="pill pill-muted">Inserisci i dati per vedere il netto base calcolato</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-footer">
+            <button id="btn-apply-calibration" type="button" class="btn btn-primary">Applica al profilo e vai al Simulatore →</button>
+          </div>
+        </div>
+
+        <div class="card backup-card">
+          <div class="backup-row">
+            <div>
+              <h2>Configurazione Personale (.json)</h2>
+              <p class="card-sub">I tuoi dati restano salvati solo su questo browser. Esporta o importa un file <code>.json</code> per backup o per spostarli su un altro dispositivo.</p>
+            </div>
+            <div class="backup-actions">
+              <button id="btn-export-config" class="btn btn-ghost" type="button">Esporta .json</button>
+              <label class="btn btn-primary" for="inp-import-config">Importa .json</label>
+              <input id="inp-import-config" type="file" accept=".json,application/json" style="display: none;" />
+            </div>
+          </div>
+          <p id="config-status-msg" class="config-status" style="display: none;"></p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Rubrica Nazioni &amp; Diarie</h2>
+                <p class="card-sub">Aggiungi le tue destinazioni abituali: vengono salvate automaticamente nel browser</p>
+              </div>
+            </div>
+
+            <form id="form-add-country" class="add-country-form">
+              <input id="new-country-name" class="input-field" type="text" placeholder="Es. Grecia, Germania, Spagna…" required />
+              <input id="new-country-diaria" class="input-field" type="number" min="0" step="0.01" placeholder="Diaria €/gg" required />
+              <select id="new-country-tipo" class="input-select">
+                <option value="estero">Estero (esente 77,47 €)</option>
+                <option value="italia">Italia (esente 46,48 €)</option>
+              </select>
+              <button class="btn btn-primary" type="submit">Aggiungi</button>
+            </form>
+
+            <div id="countries-list" class="countries-list"></div>
+            <div id="countries-empty" class="empty-state" style="display: none;">
+              Nessuna nazione salvata. Aggiungi qui le tue destinazioni abituali con la diaria giornaliera.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Parametri Retributivi</h2>
+                <p class="card-sub">Inserisci i valori della tua busta paga per ottenere il calcolo esatto</p>
+              </div>
+              <button id="btn-reset-profile" class="btn btn-ghost btn-sm" type="button">Azzera dati</button>
+            </div>
+            <form id="form-profile" class="profile-form"></form>
+            <details class="extra-details">
+              <summary>Dove trovo questi dati nella mia busta paga?</summary>
+              <ul class="guide-list">
+                <li><strong>Paga Base, Scatti, Superminimo, E.R.V.</strong>: nella testata in alto della busta paga (sotto i dati anagrafici).</li>
+                <li><strong>Addizionale Regionale / Comunale / Acconto</strong>: nel corpo del cedolino (voci trattenute mensili locali).</li>
+                <li><strong>Reddito annuo stimato</strong>: lascia <code>0</code> per la stima automatica (13 × retribuzione fissa) oppure inserisci il tuo reddito teorico annuo per il calcolo esatto delle detrazioni (0 € oltre 50.000 €).</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
